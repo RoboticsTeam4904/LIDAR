@@ -1,0 +1,105 @@
+#include "lidar_teensy.h"
+
+#include <iostream>
+#include <cstdlib>
+#include <termios.h> // serial settings
+#include <unistd.h>
+#include <fcntl.h>
+
+using namespace std;
+
+int open_teensy(string port, int baud){
+	struct termios serial_settings;
+
+	int teensy = open(port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+
+	if( teensy == -1){ // Could not open
+		cerr << "Could not open: " << port << "\n";
+		return -1;
+	}
+
+	if(tcgetattr(teensy, &serial_settings) == -1){ // Could not get serial settings
+		cerr << "Could not get serial settings for: " << port << "\n";
+		return -1;
+	}
+
+	cfsetispeed(&serial_settings, baud);
+	cfsetospeed(&serial_settings, baud);
+
+        serial_settings.c_cflag &= ~PARENB;
+        serial_settings.c_cflag &= ~CSTOPB;
+        serial_settings.c_cflag &= ~CSIZE;
+        serial_settings.c_cflag |= CS8;
+        serial_settings.c_cflag &= ~CRTSCTS;
+        serial_settings.c_cflag |= CREAD | CLOCAL;
+        serial_settings.c_iflag &= ~(IXON | IXOFF | IXANY);
+        serial_settings.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+        serial_settings.c_oflag &= ~OPOST;
+
+        serial_settings.c_cc[VMIN]  = 1;
+        serial_settings.c_cc[VTIME] = 20;
+
+	cfmakeraw(&serial_settings);
+
+	tcflush(teensy, TCIFLUSH);
+	if(tcsetattr(teensy, 0, &serial_settings) == -1){ // Could not set serial settings
+		cerr << "Could not set serial settings for: " << port << "\n";
+		return -1;
+	}
+
+	return teensy;
+}
+
+vector<tuple<int16_t, int16_t>> get_lidar_data(int teensy){
+	vector<tuple<int16_t, int16_t>> data;
+
+	char trigger[1];
+	trigger[0] = '#';
+	write(teensy, trigger, 1);
+
+	string dataset = "";
+	char response[1];
+	do{
+		if(read(teensy, response, 1) > 0){
+			dataset += response[0];
+		}
+		else{
+			usleep(1);
+		}
+	} while(response[0] != '#');
+
+	uint8_t mode = 0;
+	string idx = "";
+	string val = "";
+	for(int i = 0; i < dataset.length(); i++){
+		if(dataset[i] == '\n'){
+			mode = 0;
+			try{
+				data.push_back(tuple<int16_t, int16_t>(stoi(idx), stoi(val)));
+			}
+			catch(invalid_argument a){
+			}
+			catch(out_of_range r){
+			}
+			idx = "";
+			val = "";
+		}
+		else{
+			if(dataset[i] == ','){
+				mode = 1;
+			}
+			else if(mode == 0){
+				idx += dataset[i];
+			}
+			else{
+				val += dataset[i];
+			}
+		}
+	}
+
+	return data;
+}
+
+int close_teensy(int teensy){
+	close(teensy);
+}
