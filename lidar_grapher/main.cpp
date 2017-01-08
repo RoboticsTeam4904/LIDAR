@@ -52,6 +52,10 @@ int draw(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
 	glColor3f(1.0f, 1.0f, 1.0f);
 	glBegin(GL_POINTS);
 	glVertex2i(0, 0);
+	glVertex2i(100, 0);
+	glVertex2i(-100, 0);
+	glVertex2i(0, 100);
+	glVertex2i(0, -100);
 	glEnd();
 	
 	glColor3f(0.5f, 1.0f, 0.5f);
