@@ -1,5 +1,6 @@
 #include "line_find.h"
 
+#include <iostream>
 #include <cmath>
 
 #define PI 3.14159265
@@ -7,15 +8,14 @@
 
 using namespace std;
 
-point get_cartesian(point polar){
-	int16_t distance = get<1>(polar);
-	return point(cos((float) get<0>(polar) * PI/180.0f)*distance,
-		     sin((float) get<0>(polar) * PI/180.0f)*distance);
+void add_cartesian(LidarDatapoint * point){
+	point->x = cos((float) point->theta * PI/180.0f)*point->radius;
+	point->y = sin((float) point->theta * PI/180.0f)*point->radius;
 }
 
-float get_slope(point point1, point point2){
-	float dy = (float) get<1>(point2) - get<1>(point1);
-	float dx = (float) get<0>(point2) - get<0>(point1);
+float get_slope(LidarDatapoint * point1, LidarDatapoint * point2){
+	float dy = (float) (point2->y - point1->y);
+	float dx = (float) (point2->x - point1->x);
 
 	float slope = (dy / dx);
 
@@ -26,11 +26,11 @@ float get_slope(point point1, point point2){
 	return slope;
 }
 
-bool test_distance(point point1, point point2){
-	uint32_t point_distance = (get<0>(point1) * get<0>(point1) + get<1>(point1) * get<1>(point1))/ 64;
+bool test_distance(LidarDatapoint * point1, LidarDatapoint * point2){
+	uint32_t point_distance = (point1->x * point1->x + point1->y * point1->y)/ 64;
 
-	int16_t x_distance = get<0>(point1) - get<0>(point2);
-	int16_t y_distance = get<1>(point1) - get<1>(point2);
+	int16_t x_distance = point1->x - point2->x;
+	int16_t y_distance = point1->y - point2->y;
 	uint32_t distance = x_distance * x_distance + y_distance * y_distance;
 
 	return distance < point_distance;
@@ -48,78 +48,87 @@ bool in_range(float a, float b, float range){
 	return (a + range > b) && (a - range < b);
 }
 
-vector<point> blur_points(vector<point> lidar_data){
+void blur_points(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
+	DoublyLinkedListNode<LidarDatapoint> * node;
+	
 	for(uint8_t l = 0; l < 10; l++){
-		for(int16_t i = 0; i < lidar_data.size(); i++){
-			int16_t next_datapoint = get<1>(lidar_data[(i + 1) % lidar_data.size()]);
-			int16_t prev_datapoint = get<1>(lidar_data[abs_mod(i - 1, lidar_data.size())]);
-			if(in_range(get<1>(lidar_data[i]),
+		node = lidar_data_start;
+
+		while(node != lidar_data_start->prev){
+			int16_t next_datapoint = node->next->data->radius;
+			int16_t prev_datapoint = node->prev->data->radius;
+			if(in_range(node->data->radius,
 				    next_datapoint,
-				    get<1>(lidar_data[i]) / 16) &&
-			   in_range(get<1>(lidar_data[i]),
+				    node->data->radius / 16) &&
+			   in_range(node->data->radius,
 				    prev_datapoint,
-				    get<1>(lidar_data[i]) / 16)){
-				get<1>(lidar_data[i]) = (2 * get<1>(lidar_data[i]) +
+				    node->data->radius / 16)){
+				node->data->radius = (2 * node->data->radius +
 							 next_datapoint +
 							 prev_datapoint) / 4;
 			}
+
+			node = node->next;
 		}
 	}
-	for(int16_t i = 0; i < lidar_data.size(); i++){
-		lidar_data[i] = get_cartesian(lidar_data[i]);
+	node = lidar_data_start;
+	
+	while(node != lidar_data_start->prev){
+		add_cartesian(node->data);
+		node = node->next;
 	}
-
-	return lidar_data;
 }
 
-vector<line> get_lines(vector<point> lidar_data){
-	vector<tuple<point, point>> lines;
-	vector<point> blurred_data = blur_points(lidar_data);
-	blurred_data.shrink_to_fit();
-	int16_t max = blurred_data.size();
-	for(int16_t i = 0; i < max; i++){
-		float slope = get_slope(blurred_data[i], blurred_data[(i + 1) % blurred_data.size()]);
+vector<line> get_lines(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
+	vector<line> lines;
+	blur_points(lidar_data_start);
 
-		int16_t start_idx = i;
-		int16_t end_idx = i;
+	DoublyLinkedListNode<LidarDatapoint> * node = lidar_data_start;
 
-		while(true){
-			int16_t last_start = start_idx;
-			start_idx = abs_mod(start_idx - 1, blurred_data.size());
+	while(node->data->theta < lidar_data_start->prev->data->theta){
+		float slope = get_slope(node->data, node->next->data);
 
-			float new_slope = get_slope(blurred_data[start_idx], blurred_data[end_idx]);
-
-			if(!in_range(slope, new_slope, SLOPE_LIMIT) || !test_distance(blurred_data[start_idx], blurred_data[last_start])){
-				start_idx = last_start;
-				break;
-			}
-		}
+		DoublyLinkedListNode<LidarDatapoint> * start_node = node;
+		DoublyLinkedListNode<LidarDatapoint> * end_node = node;
+		uint8_t length = 0;
 
 		while(true){
-			int16_t last_end = end_idx;
-			end_idx = (end_idx + 1) % blurred_data.size();
-			if(end_idx == start_idx){
-				break;
-			}
+			start_node = start_node->prev;
+			length++;
 
-			float new_slope = get_slope(blurred_data[start_idx], blurred_data[end_idx]);
+			float new_slope = get_slope(start_node->data, end_node->data);
 
-			if(!in_range(slope, new_slope, SLOPE_LIMIT) || !test_distance(blurred_data[end_idx], blurred_data[last_end])){
-				end_idx = last_end;
+			if(!in_range(slope, new_slope, SLOPE_LIMIT)
+			   || !test_distance(start_node->next->data, end_node->data)){
+				start_node = start_node->next;
+				length--;
 				break;
 			}
 		}
 
-		if(abs_mod(end_idx - start_idx, blurred_data.size()) > 4){
-			lines.push_back(line(get_cartesian(lidar_data[start_idx]), get_cartesian(lidar_data[end_idx])));
-
-			if(end_idx > i){ // If we have not looped around
-				i = end_idx;
+		while(true){
+			end_node = end_node->next;
+			length++;
+			if(end_node == start_node){
+				break;
 			}
-			if(i == 0 && start_idx < max){ // If we have not looped around
-				max = start_idx;
+
+			float new_slope = get_slope(start_node->data, end_node->data);
+
+			if(!in_range(slope, new_slope, SLOPE_LIMIT)
+			   || !test_distance(end_node->data, end_node->prev->data)){
+				end_node = end_node->prev;
+				length--;
+				break;
 			}
 		}
+
+		if(length > 4){
+			lines.push_back(line(start_node->data, end_node->data));
+		}
+
+		node = end_node->next;
 	}
+	
 	return lines;
 }

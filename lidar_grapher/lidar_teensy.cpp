@@ -50,8 +50,9 @@ int open_teensy(string port, int baud){
 	return teensy;
 }
 
-vector<tuple<int16_t, int16_t>> get_lidar_data(int teensy){
-	vector<tuple<int16_t, int16_t>> data;
+DoublyLinkedListNode<LidarDatapoint> * get_lidar_data(int teensy){
+	DoublyLinkedListNode<LidarDatapoint> * first_node = NULL;
+	DoublyLinkedListNode<LidarDatapoint> * previous_node = NULL;
 
 	char trigger[1];
 	trigger[0] = '#';
@@ -75,7 +76,24 @@ vector<tuple<int16_t, int16_t>> get_lidar_data(int teensy){
 		if(dataset[i] == '\n'){
 			mode = 0;
 			try{
-				data.push_back(tuple<int16_t, int16_t>(stoi(idx), stoi(val)));
+				if(previous_node == NULL){
+					previous_node = new DoublyLinkedListNode<LidarDatapoint>;
+					previous_node->data = new LidarDatapoint;
+					previous_node->data->theta = stoi(idx);
+					previous_node->data->radius = stoi(val);
+					previous_node->next = NULL;
+					previous_node->prev = NULL;
+					first_node = previous_node;
+				}
+				else{
+					DoublyLinkedListNode<LidarDatapoint> * node = new DoublyLinkedListNode<LidarDatapoint>;
+					node->data = new LidarDatapoint;
+					node->data->theta = stoi(idx);
+					node->data->radius = stoi(val);
+					node->prev = previous_node;
+					previous_node->next = node;
+					previous_node = node;
+				}
 			}
 			catch(invalid_argument a){
 			}
@@ -97,7 +115,10 @@ vector<tuple<int16_t, int16_t>> get_lidar_data(int teensy){
 		}
 	}
 
-	return data;
+	previous_node->next = first_node;
+	first_node->prev = previous_node;
+
+	return first_node;
 }
 
 int close_teensy(int teensy){
