@@ -79,8 +79,9 @@ void blur_points(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
 	}
 }
 
-vector<line> get_lines(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
-	vector<line> lines;
+DoublyLinkedListNode<line> * get_lines(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
+	DoublyLinkedListNode<line> * first_line = NULL;
+	DoublyLinkedListNode<line> * previous_line = NULL;
 	blur_points(lidar_data_start);
 
 	DoublyLinkedListNode<LidarDatapoint> * node = lidar_data_start;
@@ -124,11 +125,35 @@ vector<line> get_lines(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
 		}
 
 		if(length > 4){
-			lines.push_back(line(start_node->data, end_node->data));
+			if(previous_line == NULL){
+				previous_line = new DoublyLinkedListNode<line>;
+				previous_line->data = new line;
+				previous_line->data->start_x = start_node->data->x;
+				previous_line->data->start_y = start_node->data->y;
+				previous_line->data->end_x = end_node->data->x;
+				previous_line->data->end_y = end_node->data->y;
+				previous_line->next = NULL;
+				previous_line->prev = NULL;
+				first_line = previous_line;
+			}
+			else{
+				DoublyLinkedListNode<line> * new_line = new DoublyLinkedListNode<line>;
+				new_line->data = new line;
+				new_line->data->start_x = start_node->data->x;
+				new_line->data->start_y = start_node->data->y;
+				new_line->data->end_x = end_node->data->x;
+				new_line->data->end_y = end_node->data->y;
+				new_line->prev = previous_line;
+				previous_line->next = new_line;
+				previous_line = new_line;
+			}
 		}
 
 		node = end_node->next;
 	}
+
+	previous_line->next = first_line;
+	first_line->prev = previous_line;
 	
-	return lines;
+	return first_line;
 }

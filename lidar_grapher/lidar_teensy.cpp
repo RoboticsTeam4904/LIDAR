@@ -115,8 +115,10 @@ DoublyLinkedListNode<LidarDatapoint> * get_lidar_data(int teensy){
 		}
 	}
 
-	previous_node->next = first_node;
-	first_node->prev = previous_node;
+	if(previous_node != NULL && first_node != NULL){
+		previous_node->next = first_node;
+		first_node->prev = previous_node;
+	}
 
 	return first_node;
 }
