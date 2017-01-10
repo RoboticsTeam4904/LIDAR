@@ -1,5 +1,4 @@
-#include "LidarDatapoint.h"
-#include "DoublyLinkedList.h"
+#include "datatypes.h"
 
 #include <vector>
 #include <tuple>

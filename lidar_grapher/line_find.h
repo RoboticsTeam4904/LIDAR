@@ -1,8 +1,7 @@
 #include <vector>
 #include <tuple>
 
-#include "LidarDatapoint.h"
-#include "DoublyLinkedList.h"
+#include "datatypes.h"
 
 typedef std::tuple<LidarDatapoint*, LidarDatapoint*> line;
 
