@@ -3,14 +3,13 @@
 #include <iostream>
 #include <cmath>
 
-#define PI 3.14159265
 #define SLOPE_LIMIT 0.1
 
 using namespace std;
 
 void add_cartesian(lidar_datapoint * point){
-	point->x = cos((float) point->theta * PI/180.0f)*point->radius;
-	point->y = sin((float) point->theta * PI/180.0f)*point->radius;
+	point->x = cos((float) point->theta * M_PI/180.0f)*point->radius;
+	point->y = sin((float) point->theta * M_PI/180.0f)*point->radius;
 }
 
 float get_slope(lidar_datapoint * point1, lidar_datapoint * point2){
@@ -79,8 +78,9 @@ void blur_points(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 	}
 }
 
-vector<line> get_lines(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
-	vector<line> lines;
+doubly_linked_list_node<line> * get_lines(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
+	doubly_linked_list_node<line> * first_line = NULL;
+	doubly_linked_list_node<line> * previous_line = NULL;
 	blur_points(lidar_data_start);
 
 	doubly_linked_list_node<lidar_datapoint> * node = lidar_data_start;
@@ -124,11 +124,35 @@ vector<line> get_lines(doubly_linked_list_node<lidar_datapoint> * lidar_data_sta
 		}
 
 		if(length > 4){
-			lines.push_back(line(start_node->data, end_node->data));
+			if(previous_line == NULL){
+				previous_line = new doubly_linked_list_node<line>;
+				previous_line->data = new line;
+				previous_line->data->start_x = start_node->data->x;
+				previous_line->data->start_y = start_node->data->y;
+				previous_line->data->end_x = end_node->data->x;
+				previous_line->data->end_y = end_node->data->y;
+				previous_line->next = NULL;
+				previous_line->prev = NULL;
+				first_line = previous_line;
+			}
+			else{
+				doubly_linked_list_node<line> * new_line = new doubly_linked_list_node<line>;
+				new_line->data = new line;
+				new_line->data->start_x = start_node->data->x;
+				new_line->data->start_y = start_node->data->y;
+				new_line->data->end_x = end_node->data->x;
+				new_line->data->end_y = end_node->data->y;
+				new_line->prev = previous_line;
+				previous_line->next = new_line;
+				previous_line = new_line;
+			}
 		}
 
 		node = end_node->next;
 	}
+
+	previous_line->next = first_line;
+	first_line->prev = previous_line;
 	
-	return lines;
+	return first_line;
 }

@@ -16,7 +16,7 @@ ifeq ($(UNAME_S),Linux)
 	INCLUDES=-I/usr/include
 	LINKS=-L/usr/lib64
 	ifeq ($(GUI),1)
-		LINKS +=-lGL -lglfw -lftgl
+		LINKS +=-lGL -lglfw
 		CFLAGS +=-DGUI
 	endif
 endif

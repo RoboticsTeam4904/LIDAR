@@ -63,8 +63,7 @@ int draw(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
  	// Time LiDAR data
  	chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 #endif
- 	vector<line> lines =  get_lines(lidar_data_start);
- 	lines.shrink_to_fit();
+ 	doubly_linked_list_node<line> * first_line =  get_lines(lidar_data_start);
 #ifdef TIME
 	chrono::high_resolution_clock::time_point end = chrono::high_resolution_clock::now();
 
@@ -76,12 +75,13 @@ int draw(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 	glColor3f(1.0f, 0.5f, 0.5f);
  	glBegin(GL_LINES);
 #endif
- 	for(uint16_t i = 0; i < lines.size(); i++){
- 		lidar_datapoint * start_point = get<0>(lines[i]);
- 		lidar_datapoint * end_point = get<1>(lines[i]);
+	doubly_linked_list_node<line> * line;
+	line = first_line;
+	while(line != first_line->prev){
 #ifdef GUI
-		glVertex2i(start_point->x / 9, -start_point->y / 9);
-		glVertex2i(end_point->x / 9, -end_point->y / 9);
+		glVertex2i(line->data->start_x / 9, -line->data->start_y / 9);
+		glVertex2i(line->data->end_x / 9, -line->data->end_y / 9);
+		line = line->next;
 #endif
 	}
 #ifdef GUI
@@ -130,9 +130,10 @@ int read_teensy(int argc, char * argv[]){
 	while(!glfwWindowShouldClose(window)){
 #endif
 		doubly_linked_list_node<lidar_datapoint> * lidar_data_start = get_lidar_data(teensy);
-		cout << "a\n";
 
-		draw(lidar_data_start);
+		if(lidar_data_start != NULL){
+			draw(lidar_data_start);
+		}
 
 #ifdef GUI
 		glfwSwapBuffers(window);

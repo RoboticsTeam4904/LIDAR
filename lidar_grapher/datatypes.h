@@ -11,6 +11,13 @@ struct lidar_datapoint {
 	int16_t y;
 };
 
+struct line {
+	int16_t start_x;
+	int16_t start_y;
+	int16_t end_x;
+	int16_t end_y;
+};
+
 /**
    Struct for a node in a DoublyLinkedList
    A doubly_linked_list_node is of a certain
