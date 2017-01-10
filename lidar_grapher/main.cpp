@@ -50,11 +50,11 @@ int draw(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 	}
 	glColor3f(1.0f, 1.0f, 1.0f);
 	glBegin(GL_POINTS);
-	glVertex2i(0, 0);
-	glVertex2i(100, 0);
-	glVertex2i(-100, 0);
-	glVertex2i(0, 100);
-	glVertex2i(0, -100);
+	for(int i = -5; i < 5; i++){
+		for(int j = -5; j < 5; j++){
+			glVertex2i(i*50, j*50);
+		}
+	}
 	glEnd();
 	
 	glColor3f(0.5f, 1.0f, 0.5f);
@@ -86,8 +86,8 @@ int draw(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 		glColor3f(1.0f, 0.5f, B);
 		if(B > 0.5f) B = 0.0f;
 		else B = 1.0f;
-		glVertex2i(line->data->start_x / 9, -line->data->start_y / 9);
-		glVertex2i(line->data->end_x / 9, -line->data->end_y / 9);
+		glVertex2i(line->data->start_x/10, -line->data->start_y/10);
+		glVertex2i(line->data->end_x/10, -line->data->end_y/10);
 #endif
 		line = line->next;
 	}
@@ -161,6 +161,13 @@ int read_file(int argc, char * argv[]){
 	doubly_linked_list_node<lidar_datapoint> * first_node = NULL;
 	doubly_linked_list_node<lidar_datapoint> * previous_node = NULL;
 
+	int lower_limit = 360;
+	int upper_limit = 0;
+	if(argc > 4){
+		lower_limit = stoi(argv[3]);
+		upper_limit = stoi(argv[4]);
+	}
+	
 	while(!file.eof()){
 		string datapoint = "";
 		getline(file, datapoint);
@@ -181,23 +188,25 @@ int read_file(int argc, char * argv[]){
 			}
 		}
 		try{
-			if(previous_node == NULL){
-				previous_node = new doubly_linked_list_node<lidar_datapoint>;
-				previous_node->data = new lidar_datapoint;
-				previous_node->data->theta = stoi(idx);
-				previous_node->data->radius = stoi(val);
-				previous_node->next = NULL;
-				previous_node->prev = NULL;
-				first_node = previous_node;
-			}
-			else{
-				doubly_linked_list_node<lidar_datapoint> * node = new doubly_linked_list_node<lidar_datapoint>;
-				node->data = new lidar_datapoint;
-				node->data->theta = stoi(idx);
-				node->data->radius = stoi(val);
-				node->prev = previous_node;
-				previous_node->next = node;
-				previous_node = node;
+			if((stoi(idx) > lower_limit && stoi(idx) < upper_limit)){
+				if(previous_node == NULL){
+					previous_node = new doubly_linked_list_node<lidar_datapoint>;
+					previous_node->data = new lidar_datapoint;
+					previous_node->data->theta = stoi(idx);
+					previous_node->data->radius = stoi(val);
+					previous_node->next = NULL;
+					previous_node->prev = NULL;
+					first_node = previous_node;
+				}
+				else{
+					doubly_linked_list_node<lidar_datapoint> * node = new doubly_linked_list_node<lidar_datapoint>;
+					node->data = new lidar_datapoint;
+					node->data->theta = stoi(idx);
+					node->data->radius = stoi(val);
+					node->prev = previous_node;
+					previous_node->next = node;
+					previous_node = node;
+				}
 			}
 		}
 		catch(invalid_argument a){

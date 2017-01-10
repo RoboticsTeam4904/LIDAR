@@ -8,9 +8,12 @@ using namespace std;
 float get_angle(line * line1, line * line2){
 	float angle1 = atan2(line1->start_y - line1->end_y,
 			     line1->start_x - line1->end_x);
+	cout << line1->start_x << ","<< line1->start_y << "\t" << line1->end_x << "," << line1->end_y << "\n";
 	float angle2 = atan2(line2->start_y - line2->end_y,
 			     line2->start_x - line2->end_x);
-	float angle = angle1 - angle2;
+	cout << line2->start_x << ","<< line2->start_y << "\t" << line2->end_x << "," << line2->end_y << "\n";
+	cout << angle1*180/M_PI << "\t" << angle2*180/M_PI << "\n";
+	float angle = angle2 - angle1;
 	if(angle < 0.0f){
 		angle = angle + M_PI*2.0;
 	}
@@ -43,7 +46,7 @@ boiler_location get_boiler(doubly_linked_list_node<line> * line_data_start){
 		uint16_t length = line_length(node->data);
 		if(length > MINIMUM_LENGTH){
 			float angle = get_angle(node->data, node->next->data);
-			cout << angle << "\t";
+			cout << angle*180.0/M_PI << "\t";
 			cout << test_distance(node->data, node->next->data) << "\n";
 		}
 		node = node->next;
