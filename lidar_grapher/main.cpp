@@ -18,9 +18,6 @@
 #include "lidar_teensy.h"
 #include "line_find.h"
 #include "datatypes.h"
-#include "DoublyLinkedList.h"
-
-#define PI 3.14159265
 
 using namespace std;
 
@@ -32,8 +29,8 @@ int16_t plot(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
 	
 	while(node != lidar_data_start->prev){
 #ifdef GUI
-		glVertex2i(cos((double) node->data->theta * PI/180.0f)*node->data->radius/10,
-			   -sin((double) node->data->theta * PI/180.0f)*node->data->radius/10);
+		glVertex2i(cos((double) node->data->theta * M_PI/180.0f)*node->data->radius/10,
+			   -sin((double) node->data->theta * M_PI/180.0f)*node->data->radius/10);
 		node = node->next;
 #endif
 	}
@@ -130,9 +127,9 @@ int read_teensy(int argc, char * argv[]){
 #ifdef GUI
 	GLFWwindow * window = setup_window();
 
-	DoublyLinkedListNode<LidarDatapoint> * lidar_data_start = get_lidar_data(teensy);
 	while(!glfwWindowShouldClose(window)){
 #endif
+		DoublyLinkedListNode<LidarDatapoint> * lidar_data_start = get_lidar_data(teensy);
 
 		if(lidar_data_start != NULL){
 			draw(lidar_data_start);
@@ -223,6 +220,7 @@ int read_file(int argc, char * argv[]){
 int main(int argc, char * argv[]){
 	if(argc < 3){
 		cout << "Usage:\n./graph_lidar [type] [serial port | file] [baud rate (optional)]\n";
+		return -1;
 	}
 	string type = argv[1];
 

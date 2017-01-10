@@ -11,12 +11,34 @@ struct LidarDatapoint {
 	int16_t y;
 };
 
-struct line{
+struct line {
 	int16_t start_x;
 	int16_t start_y;
-
 	int16_t end_x;
 	int16_t end_y;
+};
+
+/**
+   Struct for a node in a DoublyLinkedList
+   A DoublyLinkedListNode is of a certain
+   type, T.
+ */
+template <typename T>
+struct DoublyLinkedListNode {
+	/**
+	   Pointer to the data
+	 */
+	T * data;
+	/**
+	   Pointer to the next
+	   node in the list
+	*/
+	DoublyLinkedListNode<T> * next;
+	/**
+	   Pointer to the previous
+	   node in the list
+	*/
+	DoublyLinkedListNode<T> * prev;
 };
 
 #endif // __DATATYPES_H__
