@@ -3,7 +3,7 @@
 
 #include "datatypes.h"
 
-typedef std::tuple<LidarDatapoint*, LidarDatapoint*> line;
+typedef std::tuple<lidar_datapoint*, lidar_datapoint*> line;
 
-void blur_points(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start);
-std::vector<line> get_lines(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start);
+void blur_points(doubly_linked_list_node<lidar_datapoint> * lidar_data_start);
+std::vector<line> get_lines(doubly_linked_list_node<lidar_datapoint> * lidar_data_start);

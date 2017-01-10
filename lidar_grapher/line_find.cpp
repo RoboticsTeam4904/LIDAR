@@ -8,12 +8,12 @@
 
 using namespace std;
 
-void add_cartesian(LidarDatapoint * point){
+void add_cartesian(lidar_datapoint * point){
 	point->x = cos((float) point->theta * PI/180.0f)*point->radius;
 	point->y = sin((float) point->theta * PI/180.0f)*point->radius;
 }
 
-float get_slope(LidarDatapoint * point1, LidarDatapoint * point2){
+float get_slope(lidar_datapoint * point1, lidar_datapoint * point2){
 	float dy = (float) (point2->y - point1->y);
 	float dx = (float) (point2->x - point1->x);
 
@@ -26,7 +26,7 @@ float get_slope(LidarDatapoint * point1, LidarDatapoint * point2){
 	return slope;
 }
 
-bool test_distance(LidarDatapoint * point1, LidarDatapoint * point2){
+bool test_distance(lidar_datapoint * point1, lidar_datapoint * point2){
 	uint32_t point_distance = (point1->x * point1->x + point1->y * point1->y)/ 64;
 
 	int16_t x_distance = point1->x - point2->x;
@@ -48,8 +48,8 @@ bool in_range(float a, float b, float range){
 	return (a + range > b) && (a - range < b);
 }
 
-void blur_points(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
-	DoublyLinkedListNode<LidarDatapoint> * node;
+void blur_points(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
+	doubly_linked_list_node<lidar_datapoint> * node;
 	
 	for(uint8_t l = 0; l < 10; l++){
 		node = lidar_data_start;
@@ -79,17 +79,17 @@ void blur_points(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
 	}
 }
 
-vector<line> get_lines(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
+vector<line> get_lines(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 	vector<line> lines;
 	blur_points(lidar_data_start);
 
-	DoublyLinkedListNode<LidarDatapoint> * node = lidar_data_start;
+	doubly_linked_list_node<lidar_datapoint> * node = lidar_data_start;
 
 	while(node->data->theta < lidar_data_start->prev->data->theta){
 		float slope = get_slope(node->data, node->next->data);
 
-		DoublyLinkedListNode<LidarDatapoint> * start_node = node;
-		DoublyLinkedListNode<LidarDatapoint> * end_node = node;
+		doubly_linked_list_node<lidar_datapoint> * start_node = node;
+		doubly_linked_list_node<lidar_datapoint> * end_node = node;
 		uint8_t length = 0;
 
 		while(true){

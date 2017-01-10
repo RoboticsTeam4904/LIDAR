@@ -3,7 +3,7 @@
 
 #include <cstdlib>
 
-struct LidarDatapoint {
+struct lidar_datapoint {
 	int16_t theta;
 	int16_t radius;
 
@@ -13,11 +13,11 @@ struct LidarDatapoint {
 
 /**
    Struct for a node in a DoublyLinkedList
-   A DoublyLinkedListNode is of a certain
+   A doubly_linked_list_node is of a certain
    type, T.
  */
 template <typename T>
-struct DoublyLinkedListNode {
+struct doubly_linked_list_node {
 	/**
 	   Pointer to the data
 	 */
@@ -26,12 +26,12 @@ struct DoublyLinkedListNode {
 	   Pointer to the next
 	   node in the list
 	*/
-	DoublyLinkedListNode<T> * next;
+	doubly_linked_list_node<T> * next;
 	/**
 	   Pointer to the previous
 	   node in the list
 	*/
-	DoublyLinkedListNode<T> * prev;
+	doubly_linked_list_node<T> * prev;
 };
 
 #endif // __DATATYPES_H__

@@ -21,11 +21,11 @@
 
 using namespace std;
 
-int16_t plot(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
+int16_t plot(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 #ifdef GUI
 	glBegin(GL_POINTS);
 #endif
-	DoublyLinkedListNode<LidarDatapoint> * node = lidar_data_start;
+	doubly_linked_list_node<lidar_datapoint> * node = lidar_data_start;
 	
 	while(node != lidar_data_start->prev){
 #ifdef GUI
@@ -41,7 +41,7 @@ int16_t plot(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
 	return 0;
 }
 
-int draw(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
+int draw(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 #ifdef GUI
 	if(lidar_data_start != NULL){
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -77,8 +77,8 @@ int draw(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
  	glBegin(GL_LINES);
 #endif
  	for(uint16_t i = 0; i < lines.size(); i++){
- 		LidarDatapoint * start_point = get<0>(lines[i]);
- 		LidarDatapoint * end_point = get<1>(lines[i]);
+ 		lidar_datapoint * start_point = get<0>(lines[i]);
+ 		lidar_datapoint * end_point = get<1>(lines[i]);
 #ifdef GUI
 		glVertex2i(start_point->x / 9, -start_point->y / 9);
 		glVertex2i(end_point->x / 9, -end_point->y / 9);
@@ -129,7 +129,7 @@ int read_teensy(int argc, char * argv[]){
 
 	while(!glfwWindowShouldClose(window)){
 #endif
-		DoublyLinkedListNode<LidarDatapoint> * lidar_data_start = get_lidar_data(teensy);
+		doubly_linked_list_node<lidar_datapoint> * lidar_data_start = get_lidar_data(teensy);
 		cout << "a\n";
 
 		draw(lidar_data_start);
@@ -147,8 +147,8 @@ int read_teensy(int argc, char * argv[]){
 int read_file(int argc, char * argv[]){
 	fstream file(argv[2]);
 
-	DoublyLinkedListNode<LidarDatapoint> * first_node = NULL;
-	DoublyLinkedListNode<LidarDatapoint> * previous_node = NULL;
+	doubly_linked_list_node<lidar_datapoint> * first_node = NULL;
+	doubly_linked_list_node<lidar_datapoint> * previous_node = NULL;
 
 	while(!file.eof()){
 		string datapoint = "";
@@ -171,8 +171,8 @@ int read_file(int argc, char * argv[]){
 		}
 		try{
 			if(previous_node == NULL){
-				previous_node = new DoublyLinkedListNode<LidarDatapoint>;
-				previous_node->data = new LidarDatapoint;
+				previous_node = new doubly_linked_list_node<lidar_datapoint>;
+				previous_node->data = new lidar_datapoint;
 				previous_node->data->theta = stoi(idx);
 				previous_node->data->radius = stoi(val);
 				previous_node->next = NULL;
@@ -180,8 +180,8 @@ int read_file(int argc, char * argv[]){
 				first_node = previous_node;
 			}
 			else{
-				DoublyLinkedListNode<LidarDatapoint> * node = new DoublyLinkedListNode<LidarDatapoint>;
-				node->data = new LidarDatapoint;
+				doubly_linked_list_node<lidar_datapoint> * node = new doubly_linked_list_node<lidar_datapoint>;
+				node->data = new lidar_datapoint;
 				node->data->theta = stoi(idx);
 				node->data->radius = stoi(val);
 				node->prev = previous_node;
