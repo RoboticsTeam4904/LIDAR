@@ -19,6 +19,7 @@
 #include "line_find.h"
 #include "datatypes.h"
 #include "doubly_linked_list.h"
+#include "boiler_find.h"
 
 using namespace std;
 
@@ -32,8 +33,8 @@ int16_t plot(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 #ifdef GUI
 		glVertex2i(cos((double) node->data->theta * M_PI/180.0f)*node->data->radius/10,
 			   -sin((double) node->data->theta * M_PI/180.0f)*node->data->radius/10);
-		node = node->next;
 #endif
+		node = node->next;
 	}
 #ifdef GUI
 	glEnd();
@@ -72,18 +73,23 @@ int draw(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 	cout << time_span.count() << "\n";
 #endif
 
+	get_boiler(first_line);
+
 #ifdef GUI
-	glColor3f(1.0f, 0.5f, 0.5f);
  	glBegin(GL_LINES);
 #endif
 	doubly_linked_list_node<line> * line;
+	float B = 0.0f;
 	line = first_line;
 	while(line != first_line->prev){
 #ifdef GUI
+		glColor3f(1.0f, 0.5f, B);
+		if(B > 0.5f) B = 0.0f;
+		else B = 1.0f;
 		glVertex2i(line->data->start_x / 9, -line->data->start_y / 9);
 		glVertex2i(line->data->end_x / 9, -line->data->end_y / 9);
-		line = line->next;
 #endif
+		line = line->next;
 	}
 	line_list_cleanup(first_line);
 #ifdef GUI
