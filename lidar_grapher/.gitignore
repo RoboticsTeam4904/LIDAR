@@ -1,1 +1,3 @@
 a.out
+*.o
+lidar_grapher
