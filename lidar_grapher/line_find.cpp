@@ -3,8 +3,6 @@
 #include <iostream>
 #include <cmath>
 
-#define SLOPE_LIMIT 0.1
-
 using namespace std;
 
 void add_cartesian(lidar_datapoint * point){
@@ -25,6 +23,15 @@ float get_slope(lidar_datapoint * point1, lidar_datapoint * point2){
 	return slope;
 }
 
+float get_distance(lidar_datapoint * point1, lidar_datapoint * point2){
+	float dy = (float) (point2->y - point1->y);
+	float dx = (float) (point2->x - point1->x);
+
+	float distance = sqrt(dx*dx + dy*dy);
+
+	return distance;
+}
+
 bool test_distance(lidar_datapoint * point1, lidar_datapoint * point2){
 	uint32_t point_distance = (point1->x * point1->x + point1->y * point1->y)/ 64;
 
@@ -33,10 +40,6 @@ bool test_distance(lidar_datapoint * point1, lidar_datapoint * point2){
 	uint32_t distance = x_distance * x_distance + y_distance * y_distance;
 
 	return distance < point_distance;
-}
-
-int16_t abs_mod(int16_t i, int16_t mod){
-	return ((i % mod) + mod) % mod;
 }
 
 bool in_range(int16_t a, int16_t b, int16_t range){
@@ -87,6 +90,7 @@ doubly_linked_list_node<line> * get_lines(doubly_linked_list_node<lidar_datapoin
 
 	while(node->data->theta < lidar_data_start->prev->data->theta){
 		float slope = get_slope(node->data, node->next->data);
+		float distance = get_distance(node->data, node->next->data);
 
 		doubly_linked_list_node<lidar_datapoint> * start_node = node;
 		doubly_linked_list_node<lidar_datapoint> * end_node = node;
@@ -97,8 +101,10 @@ doubly_linked_list_node<line> * get_lines(doubly_linked_list_node<lidar_datapoin
 			length++;
 
 			float new_slope = get_slope(start_node->data, end_node->data);
+			float new_distance = get_distance(start_node->data, end_node->data);
 
 			if(!in_range(slope, new_slope, SLOPE_LIMIT)
+			   || !in_range(distance, new_distance, DISTANCE_LIMIT)
 			   || !test_distance(start_node->next->data, end_node->data)){
 				start_node = start_node->next;
 				length--;
@@ -114,8 +120,10 @@ doubly_linked_list_node<line> * get_lines(doubly_linked_list_node<lidar_datapoin
 			}
 
 			float new_slope = get_slope(start_node->data, end_node->data);
+			float new_distance = get_distance(start_node->data, end_node->data);
 
 			if(!in_range(slope, new_slope, SLOPE_LIMIT)
+			   || !in_range(distance, new_distance, DISTANCE_LIMIT)
 			   || !test_distance(end_node->data, end_node->prev->data)){
 				end_node = end_node->prev;
 				length--;
