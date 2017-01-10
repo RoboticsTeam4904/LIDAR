@@ -8,11 +8,11 @@ using namespace std;
 float get_angle(line * line1, line * line2){
 	float angle1 = atan2(line1->start_y - line1->end_y,
 			     line1->start_x - line1->end_x);
-	cout << line1->start_x << ","<< line1->start_y << "\t" << line1->end_x << "," << line1->end_y << "\n";
+//	cout << line1->start_x << ","<< line1->start_y << "\t" << line1->end_x << "," << line1->end_y << "\n";
 	float angle2 = atan2(line2->start_y - line2->end_y,
 			     line2->start_x - line2->end_x);
-	cout << line2->start_x << ","<< line2->start_y << "\t" << line2->end_x << "," << line2->end_y << "\n";
-	cout << angle1*180/M_PI << "\t" << angle2*180/M_PI << "\n";
+//	cout << line2->start_x << ","<< line2->start_y << "\t" << line2->end_x << "," << line2->end_y << "\n";
+//	cout << angle1*180/M_PI << "\t" << angle2*180/M_PI << "\n";
 	float angle = angle2 - angle1;
 	if(angle < 0.0f){
 		angle = angle + M_PI*2.0;

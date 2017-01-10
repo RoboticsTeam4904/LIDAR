@@ -17,7 +17,6 @@ void setup(){
 void loop(){
   if(Serial1.available()){
     uint8_t b = Serial1.read();
-    Serial.println(b);
     if(b == 0xFA && !start){
       subpacket_idx = 0;
       memset(current_packet, 0, 22);
