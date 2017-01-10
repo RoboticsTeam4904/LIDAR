@@ -17,20 +17,21 @@
 
 #include "lidar_teensy.h"
 #include "line_find.h"
-
-#define PI 3.14159265
+#include "datatypes.h"
 
 using namespace std;
 
-int16_t plot(vector<point> lidar_data){
+int16_t plot(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
 #ifdef GUI
 	glBegin(GL_POINTS);
 #endif
-	for(int16_t i = 0; i < lidar_data.size(); i++){
-		uint16_t distance = get<1>(lidar_data[i]) / 10;
+	DoublyLinkedListNode<LidarDatapoint> * node = lidar_data_start;
+	
+	while(node != lidar_data_start->prev){
 #ifdef GUI
-		glVertex2i(cos((double) get<0>(lidar_data[i]) * PI/180.0f)*distance,
-			   -sin((double) get<0>(lidar_data[i]) * PI/180.0f)*distance);
+		glVertex2i(cos((double) node->data->theta * M_PI/180.0f)*node->data->radius/10,
+			   -sin((double) node->data->theta * M_PI/180.0f)*node->data->radius/10);
+		node = node->next;
 #endif
 	}
 #ifdef GUI
@@ -40,24 +41,30 @@ int16_t plot(vector<point> lidar_data){
 	return 0;
 }
 
-int draw(vector<point> lidar_data){
+int draw(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
 #ifdef GUI
-	if(lidar_data.size() > 0){
+	if(lidar_data_start != NULL){
 		glClear(GL_COLOR_BUFFER_BIT);
 	}
 	glColor3f(1.0f, 1.0f, 1.0f);
 	glBegin(GL_POINTS);
 	glVertex2i(0, 0);
+	glVertex2i(100, 0);
+	glVertex2i(-100, 0);
+	glVertex2i(0, 100);
+	glVertex2i(0, -100);
 	glEnd();
 	
-	glColor3f(1.0f, 0.5f, 0.5f);
+	glColor3f(0.5f, 1.0f, 0.5f);
 #endif
+	plot(lidar_data_start);
+	
 #ifdef TIME
-	// Time LiDAR data
-	chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
+ 	// Time LiDAR data
+ 	chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 #endif
-	vector<line> lines =  get_lines(lidar_data);
-	lines.shrink_to_fit();
+ 	vector<line> lines =  get_lines(lidar_data_start);
+ 	lines.shrink_to_fit();
 #ifdef TIME
 	chrono::high_resolution_clock::time_point end = chrono::high_resolution_clock::now();
 
@@ -67,24 +74,20 @@ int draw(vector<point> lidar_data){
 
 #ifdef GUI
 	glColor3f(1.0f, 0.5f, 0.5f);
-	glBegin(GL_LINES);
+ 	glBegin(GL_LINES);
 #endif
-	for(uint16_t i = 0; i < lines.size(); i++){
-		point start_point = get<0>(lines[i]);
-		point end_point = get<1>(lines[i]);
+ 	for(uint16_t i = 0; i < lines.size(); i++){
+ 		LidarDatapoint * start_point = get<0>(lines[i]);
+ 		LidarDatapoint * end_point = get<1>(lines[i]);
 #ifdef GUI
-		glVertex2i(get<0>(start_point) / 9, -get<1>(start_point) / 9);
-		glVertex2i(get<0>(end_point) / 9, -get<1>(end_point) / 9);
+		glVertex2i(start_point->x / 9, -start_point->y / 9);
+		glVertex2i(end_point->x / 9, -end_point->y / 9);
 #endif
 	}
 #ifdef GUI
 	glEnd();
 #endif
 
-#ifdef GUI
-	glColor3f(0.5f, 1.0f, 0.5f);
-#endif
-	plot(lidar_data);
 
 	return 0;
 }
@@ -126,10 +129,10 @@ int read_teensy(int argc, char * argv[]){
 
 	while(!glfwWindowShouldClose(window)){
 #endif
-		vector<point> lidar_data = get_lidar_data(teensy);
-		lidar_data.shrink_to_fit();
+		DoublyLinkedListNode<LidarDatapoint> * lidar_data_start = get_lidar_data(teensy);
+		cout << "a\n";
 
-		draw(lidar_data);
+		draw(lidar_data_start);
 
 #ifdef GUI
 		glfwSwapBuffers(window);
@@ -144,7 +147,8 @@ int read_teensy(int argc, char * argv[]){
 int read_file(int argc, char * argv[]){
 	fstream file(argv[2]);
 
-	vector<point> lidar_data;
+	DoublyLinkedListNode<LidarDatapoint> * first_node = NULL;
+	DoublyLinkedListNode<LidarDatapoint> * previous_node = NULL;
 
 	while(!file.eof()){
 		string datapoint = "";
@@ -166,14 +170,33 @@ int read_file(int argc, char * argv[]){
 			}
 		}
 		try{
-			lidar_data.push_back(point(stoi(idx), stoi(val)));
+			if(previous_node == NULL){
+				previous_node = new DoublyLinkedListNode<LidarDatapoint>;
+				previous_node->data = new LidarDatapoint;
+				previous_node->data->theta = stoi(idx);
+				previous_node->data->radius = stoi(val);
+				previous_node->next = NULL;
+				previous_node->prev = NULL;
+				first_node = previous_node;
+			}
+			else{
+				DoublyLinkedListNode<LidarDatapoint> * node = new DoublyLinkedListNode<LidarDatapoint>;
+				node->data = new LidarDatapoint;
+				node->data->theta = stoi(idx);
+				node->data->radius = stoi(val);
+				node->prev = previous_node;
+				previous_node->next = node;
+				previous_node = node;
+			}
 		}
 		catch(invalid_argument a){
 		}
 		catch(out_of_range r){
 		}
 	}
-	lidar_data.shrink_to_fit();
+	
+	previous_node->next = first_node;
+	first_node->prev = previous_node;
 
 	file.close();
 
@@ -182,7 +205,7 @@ int read_file(int argc, char * argv[]){
 
 	while(!glfwWindowShouldClose(window)){
 #endif
-		draw(lidar_data);
+		draw(first_node);
 
 #ifdef GUI
 		glfwSwapBuffers(window);
@@ -196,6 +219,7 @@ int read_file(int argc, char * argv[]){
 int main(int argc, char * argv[]){
 	if(argc < 3){
 		cout << "Usage:\n./graph_lidar [type] [serial port | file] [baud rate (optional)]\n";
+		return -1;
 	}
 	string type = argv[1];
 
