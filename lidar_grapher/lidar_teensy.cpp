@@ -50,9 +50,9 @@ int open_teensy(string port, int baud){
 	return teensy;
 }
 
-DoublyLinkedListNode<LidarDatapoint> * get_lidar_data(int teensy){
-	DoublyLinkedListNode<LidarDatapoint> * first_node = NULL;
-	DoublyLinkedListNode<LidarDatapoint> * previous_node = NULL;
+doubly_linked_list_node<lidar_datapoint> * get_lidar_data(int teensy){
+	doubly_linked_list_node<lidar_datapoint> * first_node = NULL;
+	doubly_linked_list_node<lidar_datapoint> * previous_node = NULL;
 
 	char trigger[1];
 	trigger[0] = '#';
@@ -77,8 +77,8 @@ DoublyLinkedListNode<LidarDatapoint> * get_lidar_data(int teensy){
 			mode = 0;
 			try{
 				if(previous_node == NULL){
-					previous_node = new DoublyLinkedListNode<LidarDatapoint>;
-					previous_node->data = new LidarDatapoint;
+					previous_node = new doubly_linked_list_node<lidar_datapoint>;
+					previous_node->data = new lidar_datapoint;
 					previous_node->data->theta = stoi(idx);
 					previous_node->data->radius = stoi(val);
 					previous_node->next = NULL;
@@ -86,8 +86,8 @@ DoublyLinkedListNode<LidarDatapoint> * get_lidar_data(int teensy){
 					first_node = previous_node;
 				}
 				else{
-					DoublyLinkedListNode<LidarDatapoint> * node = new DoublyLinkedListNode<LidarDatapoint>;
-					node->data = new LidarDatapoint;
+					doubly_linked_list_node<lidar_datapoint> * node = new doubly_linked_list_node<lidar_datapoint>;
+					node->data = new lidar_datapoint;
 					node->data->theta = stoi(idx);
 					node->data->radius = stoi(val);
 					node->prev = previous_node;

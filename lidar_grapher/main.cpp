@@ -21,11 +21,11 @@
 
 using namespace std;
 
-int16_t plot(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
+int16_t plot(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 #ifdef GUI
 	glBegin(GL_POINTS);
 #endif
-	DoublyLinkedListNode<LidarDatapoint> * node = lidar_data_start;
+	doubly_linked_list_node<lidar_datapoint> * node = lidar_data_start;
 	
 	while(node != lidar_data_start->prev){
 #ifdef GUI
@@ -41,7 +41,7 @@ int16_t plot(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
 	return 0;
 }
 
-int draw(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
+int draw(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 #ifdef GUI
 	if(lidar_data_start != NULL){
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -63,7 +63,7 @@ int draw(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
  	// Time LiDAR data
  	chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 #endif
- 	DoublyLinkedListNode<line> * first_line =  get_lines(lidar_data_start);
+ 	doubly_linked_list_node<line> * first_line =  get_lines(lidar_data_start);
 #ifdef TIME
 	chrono::high_resolution_clock::time_point end = chrono::high_resolution_clock::now();
 
@@ -75,7 +75,7 @@ int draw(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start){
 	glColor3f(1.0f, 0.5f, 0.5f);
  	glBegin(GL_LINES);
 #endif
-	DoublyLinkedListNode<line> * line;
+	doubly_linked_list_node<line> * line;
 	line = first_line;
 	while(line != first_line->prev){
 #ifdef GUI
@@ -129,7 +129,7 @@ int read_teensy(int argc, char * argv[]){
 
 	while(!glfwWindowShouldClose(window)){
 #endif
-		DoublyLinkedListNode<LidarDatapoint> * lidar_data_start = get_lidar_data(teensy);
+		doubly_linked_list_node<lidar_datapoint> * lidar_data_start = get_lidar_data(teensy);
 
 		if(lidar_data_start != NULL){
 			draw(lidar_data_start);
@@ -148,8 +148,8 @@ int read_teensy(int argc, char * argv[]){
 int read_file(int argc, char * argv[]){
 	fstream file(argv[2]);
 
-	DoublyLinkedListNode<LidarDatapoint> * first_node = NULL;
-	DoublyLinkedListNode<LidarDatapoint> * previous_node = NULL;
+	doubly_linked_list_node<lidar_datapoint> * first_node = NULL;
+	doubly_linked_list_node<lidar_datapoint> * previous_node = NULL;
 
 	while(!file.eof()){
 		string datapoint = "";
@@ -172,8 +172,8 @@ int read_file(int argc, char * argv[]){
 		}
 		try{
 			if(previous_node == NULL){
-				previous_node = new DoublyLinkedListNode<LidarDatapoint>;
-				previous_node->data = new LidarDatapoint;
+				previous_node = new doubly_linked_list_node<lidar_datapoint>;
+				previous_node->data = new lidar_datapoint;
 				previous_node->data->theta = stoi(idx);
 				previous_node->data->radius = stoi(val);
 				previous_node->next = NULL;
@@ -181,8 +181,8 @@ int read_file(int argc, char * argv[]){
 				first_node = previous_node;
 			}
 			else{
-				DoublyLinkedListNode<LidarDatapoint> * node = new DoublyLinkedListNode<LidarDatapoint>;
-				node->data = new LidarDatapoint;
+				doubly_linked_list_node<lidar_datapoint> * node = new doubly_linked_list_node<lidar_datapoint>;
+				node->data = new lidar_datapoint;
 				node->data->theta = stoi(idx);
 				node->data->radius = stoi(val);
 				node->prev = previous_node;

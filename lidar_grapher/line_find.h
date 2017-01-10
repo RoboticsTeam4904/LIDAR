@@ -3,5 +3,5 @@
 
 #include "datatypes.h"
 
-void blur_points(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start);
-DoublyLinkedListNode<line> * get_lines(DoublyLinkedListNode<LidarDatapoint> * lidar_data_start);
+void blur_points(doubly_linked_list_node<lidar_datapoint> * lidar_data_start);
+doubly_linked_list_node<line> * get_lines(doubly_linked_list_node<lidar_datapoint> * lidar_data_start);
