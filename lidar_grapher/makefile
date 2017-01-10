@@ -2,10 +2,11 @@ CPP=g++
 
 TEENSY=lidar_teensy.cpp
 LINES=line_find.cpp
+LIST=doubly_linked_list.cpp
 MAIN=main.cpp
 EXE=lidar_grapher
 
-CFLAGS=--std=c++0x
+CFLAGS=--std=c++0x -g
 
 ifeq ($(TIME),1)
 	CFLAGS +=-DTIME
@@ -29,9 +30,10 @@ ifeq ($(UNAME_S),Darwin)
 endif
 
 
-build: $(TEENSY) $(LINES) $(MAIN)
+build: $(TEENSY) $(LINES) $(LIST) $(MAIN)
 	$(CPP) -c -fPIC $(TEENSY) $(INCLUDES) $(LINKS) $(CFLAGS)
 	$(CPP) -c -fPIC $(LINES) $(INCLUDES) $(LINKS) $(CFLAGS)
+	$(CPP) -c -fPIC $(LIST) $(INCLUDES) $(LINKS) $(CFLAGS)
 	$(CPP) -o $(EXE) $(MAIN) *.o $(INCLUDES) $(LINKS) $(CFLAGS)
 clean:
 	for file in $$(ls *.o); do rm $$file; done

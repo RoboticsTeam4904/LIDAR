@@ -18,27 +18,11 @@ struct line {
 	int16_t end_y;
 };
 
-/**
-   Struct for a node in a DoublyLinkedList
-   A doubly_linked_list_node is of a certain
-   type, T.
- */
-template <typename T>
-struct doubly_linked_list_node {
-	/**
-	   Pointer to the data
-	 */
-	T * data;
-	/**
-	   Pointer to the next
-	   node in the list
-	*/
-	doubly_linked_list_node<T> * next;
-	/**
-	   Pointer to the previous
-	   node in the list
-	*/
-	doubly_linked_list_node<T> * prev;
+struct boiler_location {
+	int16_t delta_x;
+	int16_t delta_y;
+	int16_t delta_theta;
 };
+
 
 #endif // __DATATYPES_H__

@@ -18,6 +18,7 @@
 #include "lidar_teensy.h"
 #include "line_find.h"
 #include "datatypes.h"
+#include "doubly_linked_list.h"
 
 using namespace std;
 
@@ -84,6 +85,7 @@ int draw(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 		line = line->next;
 #endif
 	}
+	line_list_cleanup(first_line);
 #ifdef GUI
 	glEnd();
 #endif
@@ -134,6 +136,8 @@ int read_teensy(int argc, char * argv[]){
 		if(lidar_data_start != NULL){
 			draw(lidar_data_start);
 		}
+
+		lidar_datapoint_list_cleanup(lidar_data_start);
 
 #ifdef GUI
 		glfwSwapBuffers(window);
