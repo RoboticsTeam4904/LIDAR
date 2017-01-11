@@ -125,4 +125,6 @@ doubly_linked_list_node<lidar_datapoint> * get_lidar_data(int teensy){
 
 int close_teensy(int teensy){
 	close(teensy);
+	return 0;
+
 }

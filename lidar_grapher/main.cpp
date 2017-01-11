@@ -125,6 +125,7 @@ int read_teensy(int argc, char * argv[]){
 	if(argc > 3){
 		baud = atoi(argv[3]);
 	}
+	
 
 	int teensy = open_teensy(port, baud);
 	if(teensy == -1){
@@ -143,6 +144,7 @@ int read_teensy(int argc, char * argv[]){
 			draw(lidar_data_start);
 		}
 
+
 		lidar_datapoint_list_cleanup(lidar_data_start);
 
 #ifdef GUI
@@ -153,6 +155,7 @@ int read_teensy(int argc, char * argv[]){
 	glfwTerminate();
 #endif
 	close_teensy(teensy);
+	return 0;
 }
 
 int read_file(int argc, char * argv[]){
@@ -225,6 +228,7 @@ int read_file(int argc, char * argv[]){
 
 	glfwTerminate();
 #endif
+	return 0;
 }
 
 int main(int argc, char * argv[]){
