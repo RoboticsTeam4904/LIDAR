@@ -24,8 +24,8 @@ ifeq ($(UNAME_S),Linux)
 endif
 ifeq ($(UNAME_S),Darwin)
 	ifeq ($(GUI),1)
-		INCLUDES=-I/usr/local/Cellar/glfw3/3.1.2/include -I/opt/X11/include
-		LINKS=-L/usr/local/Cellar/glfw3/3.1.2/lib -lglfw3
+		INCLUDES=-I/usr/local/Cellar/glfw/3.2.1/include 
+		LINKS=-L/usr/local/Cellar/glfw/3.2.1/lib -lglfw
 		CFLAGS +=-DGUI -framework OpenGl
 	endif
 endif
@@ -42,3 +42,4 @@ clean:
 	for file in $$(ls *.so); do rm $$file; done
 	for file in $$(ls *.gch); do rm $$file; done
 	for file in $$(ls $(EXE)); do rm $$file; done
+

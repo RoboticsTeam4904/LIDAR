@@ -12,7 +12,7 @@
 
 #ifdef GUI
 #include <GLFW/glfw3.h>
-#include <GL/gl.h>
+#include <OpenGL/gl.h>
 #endif
 
 #include "lidar_teensy.h"
