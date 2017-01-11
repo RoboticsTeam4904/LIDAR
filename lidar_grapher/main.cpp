@@ -114,9 +114,10 @@ void process(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 
 	// Draw lines
  	glBegin(GL_LINES);
+	glColor3f(1.0f, 0.5f, 0.5f);
 #endif
 	doubly_linked_list_node<line> * line;
-	glColor3f(1.0f, 0.5f, 0.5f);
+
 	bool finished = false;
 	line = first_line;
 	while(!finished){
