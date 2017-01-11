@@ -65,15 +65,16 @@ int draw(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
  	// Time LiDAR data
  	chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 #endif
+	
  	doubly_linked_list_node<line> * first_line =  get_lines(lidar_data_start);
+	boiler_location target = get_boiler(first_line);
+	
 #ifdef TIME
 	chrono::high_resolution_clock::time_point end = chrono::high_resolution_clock::now();
 
 	chrono::duration<double> time_span = chrono::duration_cast<chrono::duration<double>>(end - start);
 	cout << time_span.count() << "\n";
 #endif
-
-	boiler_location target = get_boiler(first_line);
 
 	if(target.delta_x != 0 && target.delta_y != 0 && target.delta_theta != 0){
 		cout << target.delta_x << "," << target.delta_y << "\t" << target.delta_theta << "\n";
