@@ -8,6 +8,9 @@
 
 using namespace std;
 
+/**
+   Connect to teensy at dev port port with baud rate baud
+ */
 int open_teensy(string port, int baud){
 	struct termios serial_settings;
 
@@ -50,6 +53,11 @@ int open_teensy(string port, int baud){
 	return teensy;
 }
 
+/**
+   Read data from teensy as a doubly linked list
+   Note that no blurring has occured yet
+   @param teensy should be the int returned from open_teensy
+ */
 doubly_linked_list_node<lidar_datapoint> * get_lidar_data(int teensy){
 	doubly_linked_list_node<lidar_datapoint> * first_node = NULL;
 	doubly_linked_list_node<lidar_datapoint> * previous_node = NULL;
@@ -123,6 +131,10 @@ doubly_linked_list_node<lidar_datapoint> * get_lidar_data(int teensy){
 	return first_node;
 }
 
+/**
+   Cleanup teensy
+   @param teensy should be the int return from open_teensy
+ */
 int close_teensy(int teensy){
 	close(teensy);
 	return 0;

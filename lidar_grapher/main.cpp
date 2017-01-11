@@ -27,7 +27,12 @@
 
 using namespace std;
 
-int16_t plot(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
+/**
+   Plot lidar data
+   @param lidar_data_start the "first" node in a circular doubly linked
+   list of lidar datapoints
+ */
+void plot(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 #ifdef GUI
 	glBegin(GL_POINTS);
 #endif
@@ -43,11 +48,15 @@ int16_t plot(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 #ifdef GUI
 	glEnd();
 #endif
-	
-	return 0;
 }
 
-int draw(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
+/**
+   Process lidar data
+   Draws a lattice, calculates (possibly timing) lines and boiler location,
+   then draws lines and boiler location.
+ */
+void process(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
+	// Begin draw lattice 
 #ifdef GUI
 	if(lidar_data_start != NULL){
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -63,13 +72,21 @@ int draw(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 	
 	glColor3f(0.5f, 1.0f, 0.5f);
 #endif
+	// End draw lattice
+
+	// Plot raw lidar data
 	plot(lidar_data_start);
 	
 #ifdef TIME
  	// Time LiDAR data
  	chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 #endif
+
+	// Calculate lines
  	doubly_linked_list_node<line> * first_line =  get_lines(lidar_data_start);
+	// Calculate boiler
+	boiler_location target = get_boiler(first_line);
+	
 #ifdef TIME
 	chrono::high_resolution_clock::time_point end = chrono::high_resolution_clock::now();
 
@@ -77,8 +94,7 @@ int draw(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 	cout << time_span.count() << "\n";
 #endif
 
-	boiler_location target = get_boiler(first_line);
-
+	// Draw boiler
 	if(target.delta_x != 0 && target.delta_y != 0 && target.delta_theta != 0){
 		cout << target.delta_x << "," << target.delta_y << "\t" << target.delta_theta << "\n";
 	}
@@ -95,7 +111,8 @@ int draw(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 		glVertex2i(target_x, target_y-10);
 		glEnd();
 	}
-	
+
+	// Draw lines
  	glBegin(GL_LINES);
 #endif
 	doubly_linked_list_node<line> * line;
@@ -112,15 +129,18 @@ int draw(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 		}
 		line = line->next;
 	}
-	line_list_cleanup(first_line);
 #ifdef GUI
 	glEnd();
 #endif
-
-
-	return 0;
+	
+	// Delete lines
+	line_list_cleanup(first_line);
 }
 
+/**
+   Setup for GLFW window
+   Window is 640 by 480, with internal space from -640 to 640 and -480 to 480
+ */
 #ifdef GUI
 GLFWwindow * setup_window(){
 	glfwInit();
@@ -140,13 +160,17 @@ GLFWwindow * setup_window(){
 }
 #endif
 
+/**
+   Begin cycle to read data from a teensy
+   This runs forever if GUI is enabled
+ */
 int read_teensy(int argc, char * argv[]){
 	string port = argv[2];
-	int baud = 115200;
+	int baud = 115200; // LIDAR teensy default baud rate
 	if(argc > 3){
 		baud = atoi(argv[3]);
 	}
-	
+
 
 	int teensy = open_teensy(port, baud);
 	if(teensy == -1){
@@ -160,9 +184,10 @@ int read_teensy(int argc, char * argv[]){
 	while(!glfwWindowShouldClose(window)){
 #endif
 		doubly_linked_list_node<lidar_datapoint> * lidar_data_start = get_lidar_data(teensy);
+		blur_points(lidar_data_start);
 
 		if(lidar_data_start != NULL){
-			draw(lidar_data_start);
+			process(lidar_data_start);
 		}
 
 
@@ -179,12 +204,17 @@ int read_teensy(int argc, char * argv[]){
 	return 0;
 }
 
+/**
+   Begin cycle to read data from a file
+   This runs forever if GUI is enabled
+ */
 int read_file(int argc, char * argv[]){
 	fstream file(argv[2]);
 
 	doubly_linked_list_node<lidar_datapoint> * first_node = NULL;
 	doubly_linked_list_node<lidar_datapoint> * previous_node = NULL;
 
+	// Load data from file into circular doubly linked list
 	while(!file.eof()){
 		string datapoint = "";
 		getline(file, datapoint);
@@ -242,7 +272,7 @@ int read_file(int argc, char * argv[]){
 
 	while(!glfwWindowShouldClose(window)){
 #endif
-		draw(first_node);
+		process(first_node);
 
 #ifdef GUI
 		glfwSwapBuffers(window);
