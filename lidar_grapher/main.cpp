@@ -29,7 +29,7 @@ int16_t plot(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 #endif
 	doubly_linked_list_node<lidar_datapoint> * node = lidar_data_start;
 	
-	while(node != lidar_data_start->prev){
+	while(node != lidar_data_start->prev){ // Caution: skips one point
 #ifdef GUI
 		glVertex2i(cos((double) node->data->theta * M_PI/180.0f)*node->data->radius/10,
 			   -sin((double) node->data->theta * M_PI/180.0f)*node->data->radius/10);
@@ -80,8 +80,9 @@ int draw(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 #endif
 	doubly_linked_list_node<line> * line;
 	float B = 0.0f;
+	bool finished = false;
 	line = first_line;
-	while(line != first_line->prev){
+	while(!finished){
 #ifdef GUI
 		glColor3f(1.0f, 0.5f, B);
 		if(B > 0.5f) B = 0.0f;
@@ -89,6 +90,9 @@ int draw(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 		glVertex2i(line->data->start_x/10, -line->data->start_y/10);
 		glVertex2i(line->data->end_x/10, -line->data->end_y/10);
 #endif
+		if(line->next == first_line){
+			finished = true;
+		}
 		line = line->next;
 	}
 	line_list_cleanup(first_line);
@@ -213,6 +217,8 @@ int read_file(int argc, char * argv[]){
 	first_node->prev = previous_node;
 
 	file.close();
+	
+	blur_points(first_node);
 
 #ifdef GUI
 	GLFWwindow * window = setup_window();

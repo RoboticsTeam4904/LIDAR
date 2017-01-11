@@ -5,11 +5,20 @@
 
 using namespace std;
 
+/**
+   Sets the cartersian variables of the lidar_datapoint.
+   This does not modify the theta or radius variables.
+ */
 void add_cartesian(lidar_datapoint * point){
 	point->x = cos((float) point->theta * M_PI/180.0f)*point->radius;
 	point->y = sin((float) point->theta * M_PI/180.0f)*point->radius;
 }
 
+/**
+   Calculates the slope of the line between two lidar_datapoints.
+   This requires that the cartersian variables of the points be
+   calculated already.
+ */
 float get_slope(lidar_datapoint * point1, lidar_datapoint * point2){
 	float dy = (float) (point2->y - point1->y);
 	float dx = (float) (point2->x - point1->x);
@@ -23,6 +32,10 @@ float get_slope(lidar_datapoint * point1, lidar_datapoint * point2){
 	return slope;
 }
 
+/**
+   Calculates the distance between two points.
+   Standard Pythagorean theorum. Uses cartersian variables.
+ */
 float get_distance(lidar_datapoint * point1, lidar_datapoint * point2){
 	float dy = (float) (point2->y - point1->y);
 	float dx = (float) (point2->x - point1->x);
@@ -32,28 +45,39 @@ float get_distance(lidar_datapoint * point1, lidar_datapoint * point2){
 	return distance;
 }
 
-bool test_distance(lidar_datapoint * point1, lidar_datapoint * point2){
-	uint32_t point_distance = (point1->x * point1->x + point1->y * point1->y)/ 64;
-
-	int16_t x_distance = point1->x - point2->x;
-	int16_t y_distance = point1->y - point2->y;
-	uint32_t distance = x_distance * x_distance + y_distance * y_distance;
-
-	return distance < point_distance;
-}
-
+/**
+   Determines if two 16 bit ints are within a certain
+   range of each other. range should be positive,
+   although this function does not check.
+ */
 bool in_range(int16_t a, int16_t b, int16_t range){
 	return (a + range > b) && (a - range < b);
 }
 
+/**
+   Determines if two floats are within a certain
+   range of each other. range should be positive,
+   although this function does not check.
+ */
 bool in_range(float a, float b, float range){
 	return (a + range > b) && (a - range < b);
 }
 
+/**
+   Apply a transform to all the points in a list that "averages" their
+   radii with nearby radii. This is similar to a linear approximation
+   of a Gaussian blur one point in each direction.
+   The transformation is performed in place.
+   The cartesian portion of the lidar_datapoint is also filled out at
+   the termination of this function.
+
+   @param lidar_data_start
+   	The "first" element in a doubly linked list of lidar_datapoints
+ */
 void blur_points(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 	doubly_linked_list_node<lidar_datapoint> * node;
 	
-	for(uint8_t l = 0; l < 10; l++){
+	for(uint8_t l = 0; l < BLUR_COUNT; l++){
 		node = lidar_data_start;
 
 		while(node != lidar_data_start->prev){
@@ -81,10 +105,16 @@ void blur_points(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 	}
 }
 
+/**
+   Calculate the lines within the dataset.
+   @param lidar_data_start
+   	The "first" element in a doubly linked list of lidar_datapoints
+	Note that the list should be circular in both directions
+   @return a doubly linked list of lines
+ */
 doubly_linked_list_node<line> * get_lines(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 	doubly_linked_list_node<line> * first_line = NULL;
 	doubly_linked_list_node<line> * previous_line = NULL;
-	blur_points(lidar_data_start);
 
 	doubly_linked_list_node<lidar_datapoint> * node = lidar_data_start;
 
@@ -96,22 +126,23 @@ doubly_linked_list_node<line> * get_lines(doubly_linked_list_node<lidar_datapoin
 		doubly_linked_list_node<lidar_datapoint> * end_node = node;
 		uint8_t length = 0;
 
+		// Run backward (decreasing angle) slope and distance comparison
 		while(true){
 			start_node = start_node->prev;
 			length++;
 
 			float new_slope = get_slope(start_node->data, end_node->data);
-			float new_distance = get_distance(start_node->data, end_node->data);
+			float new_distance = get_distance(start_node->data, start_node->next->data);
 
 			if(!in_range(slope, new_slope, SLOPE_LIMIT)
-			   || !in_range(distance, new_distance, DISTANCE_LIMIT)
-			   || !test_distance(start_node->next->data, end_node->data)){
+			   || !in_range(distance, new_distance, DISTANCE_LIMIT)){
 				start_node = start_node->next;
 				length--;
 				break;
 			}
 		}
 
+		// Run forward (increasing angle) slope and distance comparison
 		while(true){
 			end_node = end_node->next;
 			length++;
@@ -120,18 +151,18 @@ doubly_linked_list_node<line> * get_lines(doubly_linked_list_node<lidar_datapoin
 			}
 
 			float new_slope = get_slope(start_node->data, end_node->data);
-			float new_distance = get_distance(start_node->data, end_node->data);
+			float new_distance = get_distance(end_node->prev->data, end_node->data);
 
 			if(!in_range(slope, new_slope, SLOPE_LIMIT)
-			   || !in_range(distance, new_distance, DISTANCE_LIMIT)
-			   || !test_distance(end_node->data, end_node->prev->data)){
+			   || !in_range(distance, new_distance, DISTANCE_LIMIT)){
 				end_node = end_node->prev;
 				length--;
 				break;
 			}
 		}
 
-		if(length > 4){
+		// Add line if it meets length requirements
+		if(length > MIN_LINE_LENGTH){
 			if(previous_line == NULL){
 				previous_line = new doubly_linked_list_node<line>;
 				previous_line->data = new line;
