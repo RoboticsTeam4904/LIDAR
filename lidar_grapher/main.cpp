@@ -33,7 +33,7 @@ int16_t plot(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 #endif
 	doubly_linked_list_node<lidar_datapoint> * node = lidar_data_start;
 	
-	while(node != lidar_data_start->prev){
+	while(node != lidar_data_start->prev){ // Caution: skips one point
 #ifdef GUI
 		glVertex2i(cos((double) node->data->theta * M_PI/180.0f)*node->data->radius/10,
 			   -sin((double) node->data->theta * M_PI/180.0f)*node->data->radius/10);
@@ -54,9 +54,9 @@ int draw(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 	}
 	glColor3f(1.0f, 1.0f, 1.0f);
 	glBegin(GL_POINTS);
-	for(int i = -5; i < 5; i++){
-		for(int j = -5; j < 5; j++){
-			glVertex2i(i*50, j*50);
+	for(int i = -2; i < 3; i++){
+		for(int j = -2; j < 3; j++){
+			glVertex2i(i*100, j*100);
 		}
 	}
 	glEnd();
@@ -77,22 +77,39 @@ int draw(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 	cout << time_span.count() << "\n";
 #endif
 
-	get_boiler(first_line);
+	boiler_location target = get_boiler(first_line);
+
+	if(target.delta_x != 0 && target.delta_y != 0 && target.delta_theta != 0){
+		cout << target.delta_x << "," << target.delta_y << "\t" << target.delta_theta << "\n";
+	}
 
 #ifdef GUI
+	if(target.delta_x != 0 && target.delta_y != 0 && target.delta_theta != 0){
+		glBegin(GL_LINES);
+		glColor3f(0.5f, 0.5f, 1.0f);
+		int16_t target_x = target.delta_x / 10;
+		int16_t target_y = -target.delta_y / 10;
+		glVertex2i(target_x+10, target_y);
+		glVertex2i(target_x-10, target_y);
+		glVertex2i(target_x, target_y+10);
+		glVertex2i(target_x, target_y-10);
+		glEnd();
+	}
+	
  	glBegin(GL_LINES);
 #endif
 	doubly_linked_list_node<line> * line;
-	float B = 0.0f;
+	glColor3f(1.0f, 0.5f, 0.5f);
+	bool finished = false;
 	line = first_line;
-	while(line != first_line->prev){
+	while(!finished){
 #ifdef GUI
-		glColor3f(1.0f, 0.5f, B);
-		if(B > 0.5f) B = 0.0f;
-		else B = 1.0f;
 		glVertex2i(line->data->start_x/10, -line->data->start_y/10);
 		glVertex2i(line->data->end_x/10, -line->data->end_y/10);
 #endif
+		if(line->next == first_line){
+			finished = true;
+		}
 		line = line->next;
 	}
 	line_list_cleanup(first_line);
@@ -217,6 +234,8 @@ int read_file(int argc, char * argv[]){
 	first_node->prev = previous_node;
 
 	file.close();
+	
+	blur_points(first_node);
 
 #ifdef GUI
 	GLFWwindow * window = setup_window();

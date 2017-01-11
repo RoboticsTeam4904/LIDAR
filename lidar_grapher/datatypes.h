@@ -21,7 +21,7 @@ struct line {
 struct boiler_location {
 	int16_t delta_x;
 	int16_t delta_y;
-	int16_t delta_theta;
+	float delta_theta;
 };
 
 
