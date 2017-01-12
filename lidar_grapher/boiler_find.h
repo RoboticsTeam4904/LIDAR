@@ -13,7 +13,7 @@
    The minimum length of a line, in mm.
    Used to reduce uneeded angle calculations
 */
-#define MINIMUM_LENGTH 200
+#define MINIMUM_LENGTH 256
 /**
    The amount to divide the distance from the origin
    to the endpoint of a line to for comparison to the
@@ -21,7 +21,7 @@
    Larger numbers increase sensitivity, smaller numbers
    decrease sensitivity
  */
-#define ENDPOINT_DIVISOR 256
+#define ENDPOINT_DIVISOR 128
 
 /**
    Calculate the location of the boiler based on line data.
