@@ -8,12 +8,12 @@
    The algorithm determines the end of a line by looking for a change
    in slope. This is the limit of that change.
  */
-#define SLOPE_LIMIT 0.12
+#define SLOPE_LIMIT 0.09
 /**
    The algorithm also looks for a change in the distance between points.
    This is the limit of that change.
  */
-#define DISTANCE_LIMIT 128
+#define DISTANCE_LIMIT 384
 /**
    How many times to apply the filter. More is smoother, but tends to
    erode curves and slows calculations.
