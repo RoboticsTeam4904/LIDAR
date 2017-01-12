@@ -181,9 +181,9 @@ int read_teensy(int argc, char * argv[]){
 	while(!glfwWindowShouldClose(window)){
 #endif
 		doubly_linked_list_node<lidar_datapoint> * lidar_data_start = get_lidar_data(teensy);
-		blur_points(lidar_data_start);
 
 		if(lidar_data_start != NULL){
+			blur_points(lidar_data_start);
 			process(lidar_data_start);
 		}
 
@@ -192,6 +192,7 @@ int read_teensy(int argc, char * argv[]){
 
 #ifdef GUI
 		glfwSwapBuffers(window);
+		glfwPollEvents();
 		usleep(100000);
 	}
 
@@ -273,11 +274,15 @@ int read_file(int argc, char * argv[]){
 
 #ifdef GUI
 		glfwSwapBuffers(window);
+		glfwPollEvents();
 		usleep(100000);
 	}
 
 	glfwTerminate();
 #endif
+
+	lidar_datapoint_list_cleanup(first_node);
+	
 	return 0;
 }
 
