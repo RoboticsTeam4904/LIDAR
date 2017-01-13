@@ -82,12 +82,13 @@ boiler_location get_boiler(doubly_linked_list_node<line> * line_data_start){
 		uint16_t length = line_length(node->data);
 		if(length > MINIMUM_LENGTH){
 			float angle = get_angle(node->data, node->next->data);
-			// TODO: compare angle, load boiler data
-			bool nearby = test_distance(node->data, node->next->data);
-			if(nearby){
-				location.delta_x = node->data->end_x;
-				location.delta_y = node->data->end_y;
-				location.delta_theta = calculate_angle(node->data);
+			if(angle < TARGET_ANGLE + ANGLE_RANGE && angle > TARGET_ANGLE - ANGLE_RANGE){
+				bool nearby = test_distance(node->data, node->next->data);
+				if(nearby){
+					location.delta_x = node->data->end_x;
+					location.delta_y = node->data->end_y;
+					location.delta_theta = calculate_angle(node->data);
+				}
 			}
 		}
 		if(node->next == line_data_start){

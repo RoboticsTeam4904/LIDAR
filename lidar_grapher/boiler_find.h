@@ -22,6 +22,11 @@
    decrease sensitivity
  */
 #define ENDPOINT_DIVISOR 128
+/**
+   Range for an angle to be considered the TARGET_ANGLE 
+*/
+#define ANGLE_RANGE M_PI/24.0
+
 
 /**
    Calculate the location of the boiler based on line data.
