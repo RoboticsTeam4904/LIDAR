@@ -187,6 +187,9 @@ doubly_linked_list_node<line> * get_lines(doubly_linked_list_node<lidar_datapoin
 			}
 		}
 
+		if(end_node->next->data->theta < start_node->next->data->theta){
+			break;
+		}
 		node = end_node->next;
 	}
 
