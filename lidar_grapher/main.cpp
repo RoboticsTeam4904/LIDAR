@@ -27,28 +27,24 @@
 
 using namespace std;
 
+#ifdef GUI
 /**
    Plot lidar data
    @param lidar_data_start the "first" node in a circular doubly linked
    list of lidar datapoints
  */
 void plot(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
-#ifdef GUI
 	glBegin(GL_POINTS);
-#endif
 	doubly_linked_list_node<lidar_datapoint> * node = lidar_data_start;
 	
 	while(node != lidar_data_start->prev){ // Caution: skips one point
-#ifdef GUI
 		glVertex2i(cos((double) node->data->theta * M_PI/180.0f)*node->data->radius/10,
 			   -sin((double) node->data->theta * M_PI/180.0f)*node->data->radius/10);
-#endif
 		node = node->next;
 	}
-#ifdef GUI
 	glEnd();
-#endif
 }
+#endif
 
 /**
    Process lidar data
@@ -71,29 +67,39 @@ void process(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 	glEnd();
 	
 	glColor3f(0.5f, 1.0f, 0.5f);
-#endif
 	// End draw lattice
 
 	// Plot raw lidar data
 	plot(lidar_data_start);
+#endif
 	
 #ifdef TIME
- 	// Time LiDAR data
+ 	// Time calculate lines data
  	chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 #endif
 
 	// Calculate lines
  	doubly_linked_list_node<line> * first_line =  get_lines(lidar_data_start);
-	// Calculate boiler
-	boiler_location target = get_boiler(first_line);
 	
 #ifdef TIME
 	chrono::high_resolution_clock::time_point end = chrono::high_resolution_clock::now();
 
 	chrono::duration<double> time_span = chrono::duration_cast<chrono::duration<double>>(end - start);
-	cout << time_span.count() << "\n";
+	cout << "Calculate lines:\t" << time_span.count() << "\n";
+
+	start = chrono::high_resolution_clock::now();
 #endif
 
+	// Calculate boiler
+	boiler_location target = get_boiler(first_line);
+	
+#ifdef TIME
+	end = chrono::high_resolution_clock::now();
+
+	time_span = chrono::duration_cast<chrono::duration<double>>(end - start);
+	cout << "Find the boiler:\t" << time_span.count() << "\n";
+#endif
+	
 	// Draw boiler
 	if(target.delta_x != 0 && target.delta_y != 0 && target.delta_theta != 0){
 		cout << target.delta_x << "," << target.delta_y << "\t" << target.delta_theta << "\n";
@@ -115,22 +121,22 @@ void process(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 	// Draw lines
  	glBegin(GL_LINES);
 	glColor3f(1.0f, 0.5f, 0.5f);
-#endif
+
 	doubly_linked_list_node<line> * line;
 
 	bool finished = false;
 	line = first_line;
 	while(!finished){
-#ifdef GUI
+
 		glVertex2i(line->data->start_x/10, -line->data->start_y/10);
 		glVertex2i(line->data->end_x/10, -line->data->end_y/10);
-#endif
+
 		if(line->next == first_line){
 			finished = true;
 		}
 		line = line->next;
 	}
-#ifdef GUI
+
 	glEnd();
 #endif
 	
@@ -187,7 +193,20 @@ int read_teensy(int argc, char * argv[]){
 		doubly_linked_list_node<lidar_datapoint> * lidar_data_start = get_lidar_data(teensy);
 
 		if(lidar_data_start != NULL){
+#ifdef TIME
+			// Time calculate lines data
+			chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
+#endif
+
+			// Blur points
 			blur_points(lidar_data_start);
+	
+#ifdef TIME
+			chrono::high_resolution_clock::time_point end = chrono::high_resolution_clock::now();
+
+			chrono::duration<double> time_span = chrono::duration_cast<chrono::duration<double>>(end - start);
+			cout << "Blurring points:\t" << time_span.count() << "\n";
+#endif
 			process(lidar_data_start);
 		}
 
@@ -267,8 +286,21 @@ int read_file(int argc, char * argv[]){
 
 	file.close();
 	
-	blur_points(first_node);
+#ifdef TIME
+	// Time calculate lines data
+	chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
+#endif
 
+	// Blur points
+	blur_points(first_node);
+	
+#ifdef TIME
+	chrono::high_resolution_clock::time_point end = chrono::high_resolution_clock::now();
+
+	chrono::duration<double> time_span = chrono::duration_cast<chrono::duration<double>>(end - start);
+	cout << "Blurring points:\t" << time_span.count() << "\n";
+#endif
+	
 #ifdef GUI
 	GLFWwindow * window = setup_window();
 
