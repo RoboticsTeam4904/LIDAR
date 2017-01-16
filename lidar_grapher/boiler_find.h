@@ -8,7 +8,7 @@
    The angle between the boiler and the operator stations
    This is 135*, or 3pi/4 radians
  */
-#define TARGET_ANGLE M_PI*3.0/4.0
+#define TARGET_ANGLE M_PI/4.0
 /**
    The minimum length of a line, in mm.
    Used to reduce uneeded angle calculations
