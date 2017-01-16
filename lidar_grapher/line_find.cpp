@@ -82,18 +82,15 @@ void blur_points(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 
 		while(node != lidar_data_start->prev){
 			int16_t next_datapoint = node->next->data->radius;
-			int16_t prev_datapoint = node->prev->data->radius;
-			if(in_range(node->data->radius,
-				    next_datapoint,
-				    node->data->radius / 16) &&
-			   in_range(node->data->radius,
-				    prev_datapoint,
-				    node->data->radius / 16)){
-				node->data->radius = (2 * node->data->radius +
-							 next_datapoint +
-							 prev_datapoint) / 4;
+			int16_t node_range = node->data->radius / 16;
+			if(in_range(node->data->radius, next_datapoint, node_range)){
+				int16_t prev_datapoint = node->prev->data->radius;
+				if(in_range(node->data->radius, prev_datapoint, node_range)){
+					node->data->radius = (node->data->radius +
+							      next_datapoint +
+							      prev_datapoint) / 3;
+				}
 			}
-
 			node = node->next;
 		}
 	}
@@ -120,7 +117,7 @@ doubly_linked_list_node<line> * get_lines(doubly_linked_list_node<lidar_datapoin
 
 	while(node->data->theta < lidar_data_start->prev->data->theta){
 		float slope = get_slope(node->data, node->next->data);
-		float distance = get_distance(node->data, node->next->data);
+		int16_t distance = get_distance(node->data, node->next->data);
 
 		doubly_linked_list_node<lidar_datapoint> * start_node = node;
 		doubly_linked_list_node<lidar_datapoint> * end_node = node;
@@ -132,7 +129,7 @@ doubly_linked_list_node<line> * get_lines(doubly_linked_list_node<lidar_datapoin
 			length++;
 
 			float new_slope = get_slope(start_node->data, end_node->data);
-			float new_distance = get_distance(start_node->data, start_node->next->data);
+			int16_t new_distance = get_distance(start_node->data, start_node->next->data);
 
 			if(!in_range(slope, new_slope, SLOPE_LIMIT)
 			   || !in_range(distance, new_distance, DISTANCE_LIMIT)){
@@ -151,7 +148,7 @@ doubly_linked_list_node<line> * get_lines(doubly_linked_list_node<lidar_datapoin
 			}
 
 			float new_slope = get_slope(start_node->data, end_node->data);
-			float new_distance = get_distance(end_node->prev->data, end_node->data);
+			int16_t new_distance = get_distance(end_node->prev->data, end_node->data);
 
 			if(!in_range(slope, new_slope, SLOPE_LIMIT)
 			   || !in_range(distance, new_distance, DISTANCE_LIMIT)){

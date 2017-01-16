@@ -18,7 +18,7 @@
    How many times to apply the filter. More is smoother, but tends to
    erode curves and slows calculations.
  */
-#define BLUR_COUNT 4
+#define BLUR_COUNT 3
 /**
    The minimum number of points on a line.
  */
