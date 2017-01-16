@@ -86,9 +86,9 @@ void blur_points(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 			if(in_range(node->data->radius, next_datapoint, node_range)){
 				int16_t prev_datapoint = node->prev->data->radius;
 				if(in_range(node->data->radius, prev_datapoint, node_range)){
-					node->data->radius = (node->data->radius +
+					node->data->radius = (2*node->data->radius +
 							      next_datapoint +
-							      prev_datapoint) / 3;
+							      prev_datapoint) / 4;
 				}
 			}
 			node = node->next;
