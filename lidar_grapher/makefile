@@ -7,7 +7,7 @@ BOILER=boiler_find.cpp
 MAIN=main.cpp
 EXE=lidar_grapher
 
-CFLAGS=--std=c++0x -g
+CFLAGS=--std=c++0x
 
 ifeq ($(TIME),1)
 	CFLAGS +=-DTIME
