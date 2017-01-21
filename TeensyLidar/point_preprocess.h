@@ -1,3 +1,6 @@
+#ifndef __POINT_PREPROCESS_H__
+#define __POINT_PREPROCESS_H__
+
 #include "datatypes.h"
 #include "doubly_linked_list.h"
 
@@ -10,7 +13,7 @@
 /**
    Threshold for interpolating a point between several other points
  */
-#define INTERPOLATE_THRESHOLD
+#define INTERPOLATE_THRESHOLD 32
 
 /**
    Adds a single point between several other points based on slope
@@ -36,6 +39,8 @@ void blur_points(doubly_linked_list_node<lidar_datapoint> * lidar_data_start);
    Add the cartesian portion of each lidar_datapoint
    
    @param lidar_data_start
-   	The "first" element in a doubly linked list of lidar_datapoints
+   	The "first" element in a doubly linked list of lidar_datapoint
  */
-void add_cartesians(doubly_linked_list_node<lidar_datapoints> * lidar_data_start);
+void add_cartesians(doubly_linked_list_node<lidar_datapoint> * lidar_data_start);
+
+#endif

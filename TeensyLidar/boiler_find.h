@@ -1,3 +1,6 @@
+#ifndef __BOILER_FIND_H__
+#define __BOILER_FIND_H__
+
 #include <vector>
 #include <tuple>
 
@@ -41,3 +44,6 @@
    	Defaults to all zeros if none is found (please check for this)
  */
 boiler_location get_boiler(doubly_linked_list_node<line> * line_data_start);
+
+
+#endif

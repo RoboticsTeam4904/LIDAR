@@ -1,3 +1,6 @@
+#ifndef __LINE_FIND_H
+#define __LINE_FIND_H
+
 #include "datatypes.h"
 #include "doubly_linked_list.h"
 
@@ -24,3 +27,5 @@
    @return a doubly linked list of lines
  */
 doubly_linked_list_node<line> * get_lines(doubly_linked_list_node<lidar_datapoint> * lidar_data_start);
+
+#endif

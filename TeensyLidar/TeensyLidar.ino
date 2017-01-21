@@ -1,3 +1,6 @@
+#include "line_find.h"
+#include "boiler_find.h"
+#include "doubly_linked_list.h"
 #include "point_preprocess.h"
 #include "datatypes.h"
 
@@ -82,6 +85,10 @@ void loop(){
 	}
 }
 
+/**
+   Attempt to load the next byte from the LIDAR Serial
+   into the packet array
+ */
 void try_load_next_byte(){
 	if(Serial1.available()){
 		uint8_t b = Serial1.read();
@@ -101,6 +108,9 @@ void try_load_next_byte(){
 	}
 }
 
+/**
+   Update the distance array with the latest packet
+ */
 void packet_to_array(){
 	uint8_t idx = current_packet[1] - 0xA0;
 	if(idx != last_idx){
@@ -122,8 +132,10 @@ void packet_to_array(){
 	}
 }
 
+/**
+   Transfer the distance array into 
+ */
 void load_linked_list(){
-	doubly_linked_list_node<lidar_datapoint> * first_node = NULL;
 	doubly_linked_list_node<lidar_datapoint> * previous_node = NULL;
 	for(int i = 0; i < 360; i++){
 		if(distances[i] != 0){

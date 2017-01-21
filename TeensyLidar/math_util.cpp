@@ -1,5 +1,7 @@
 #include "math_util.h"
 
+#include <math.h>
+
 /**
    Calculates the slope of the line between two lidar_datapoints.
    This requires that the cartersian variables of the points be

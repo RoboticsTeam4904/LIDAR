@@ -1,4 +1,7 @@
 #include "point_preprocess.h"
+#include "math_util.h"
+
+#include <math.h>
 
 /**
    Adds a single point between several other points based on slope

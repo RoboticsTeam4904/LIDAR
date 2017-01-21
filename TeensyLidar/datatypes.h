@@ -1,7 +1,7 @@
 #ifndef __DATATYPES_H__
 #define __DATATYPES_H__
 
-#include <cstdlib>
+#include <stdint.h>
 
 struct lidar_datapoint {
 	int16_t theta;

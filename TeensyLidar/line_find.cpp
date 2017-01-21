@@ -1,6 +1,5 @@
 #include "line_find.h"
-
-#include <cmath>
+#include "math_util.h"
 
 /**
    Calculate the lines within the dataset.

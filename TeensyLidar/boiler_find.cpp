@@ -1,9 +1,6 @@
 #include "boiler_find.h"
 
-#include <iostream>
-#include <cmath>
-
-using namespace std;
+#include <math.h>
 
 /**
    Calculates the angle of a line.
