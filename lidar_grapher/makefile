@@ -24,11 +24,11 @@ ifeq ($(UNAME_S),Linux)
 endif
 ifeq ($(UNAME_S),Darwin)
 	ifeq ($(GUI),1)
-		INCLUDES=-I/usr/local/Cellar/glfw/3.2.1/include 
-		LINKS=-L/usr/local/Cellar/glfw/3.2.1/lib -lglfw
-		CFLAGS +=-DGUI -framework OpenGl
+		INCLUDES=-framework OpenGl -framework Cocoa -framework IOkit -framework CoreVideo -I/usr/local/Cellar/glfw/3.2.1/include 
+		LINKS=-L/usr/local/Cellar/glfw/3.2.1/lib -lglfw3
+		CFLAGS +=-DGUI 
 	endif
-endif
+endif 
 
 
 build: $(TEENSY) $(LINES) $(LIST) $(BOILER) $(MAIN)

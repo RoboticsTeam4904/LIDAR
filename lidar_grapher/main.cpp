@@ -12,11 +12,11 @@
 
 #ifdef GUI
 #include <GLFW/glfw3.h>
-#ifdef __APPLE__
+//#ifdef __APPLE__
 #include <OpenGL/gl.h>
-#else
-#include <GL/gl.h>
-#endif
+//#else
+//#include <GL/gl.h>
+//#endif
 #endif
 
 #include "lidar_teensy.h"
@@ -229,6 +229,8 @@ int read_teensy(int argc, char * argv[]){
    Begin cycle to read data from a file
    This runs forever if GUI is enabled
  */
+
+   
 int read_file(int argc, char * argv[]){
 	fstream file(argv[2]);
 
