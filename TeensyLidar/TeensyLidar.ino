@@ -40,7 +40,9 @@ void loop(){
 	}
 
 	if(last_idx == 0xFA){
-		calculation_idx = 1; // Start calculation
+		if(calculation_idx == 0){
+			calculation_idx = 1; // Start calculation
+		}
 	}
 	
 	if(calculation_idx == 1){
