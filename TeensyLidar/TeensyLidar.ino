@@ -189,7 +189,8 @@ void loop() {
 
   // Logging
   if (Serial.available()) {
-    if (Serial.read() == '1') {
+    char request = Serial.read();
+    if (request == '1') {
       doubly_linked_list_node<lidar_datapoint> * node = lidar_data_start->next;
       bool finished = false;
 
@@ -209,7 +210,39 @@ void loop() {
         }
         node = node->next;
       }
+      Serial.print("#");
+    }
+    else if(request == '2'){
+      doubly_linked_list_node<line> * node = line_data_start->next;
+      bool finished = false;
 
+      while (node != line_data_start && !finished) {
+        for (uint8_t j = 1; j < 3; j++) {
+          if (node->data->start_x < pow(10, j)) Serial.print("0");
+        }
+        Serial.print(node->data->start_x);
+        Serial.print(",");
+        for (uint8_t j = 1; j < 3; j++) {
+          if (node->data->start_y < pow(10, j)) Serial.print("0");
+        }
+        Serial.print(node->data->start_y);
+        Serial.print(",");
+        for (uint8_t j = 1; j < 3; j++) {
+          if (node->data->end_x < pow(10, j)) Serial.print("0");
+        }
+        Serial.print(node->data->end_x);
+        Serial.print(",");
+        for (uint8_t j = 1; j < 3; j++) {
+          if (node->data->end_y < pow(10, j)) Serial.print("0");
+        }
+        Serial.print(node->data->end_y);
+        Serial.print(",");
+        delayMicroseconds(2);
+        if (node == line_data_start->prev) {
+          finished = true;
+        }
+        node = node->next;
+      }
       Serial.print("#");
     }
   }
