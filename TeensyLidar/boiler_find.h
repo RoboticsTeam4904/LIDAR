@@ -10,7 +10,7 @@
 /**
    The angle between the boiler and the operator stations
    This is 135*, or 3pi/4 radians
- */
+*/
 #define TARGET_ANGLE M_PI/4.0
 /**
    The minimum length of a line, in mm.
@@ -23,10 +23,10 @@
    distance between the two endpoints of a line.
    Larger numbers increase sensitivity, smaller numbers
    decrease sensitivity
- */
+*/
 #define ENDPOINT_DIVISOR 128
 /**
-   Range for an angle to be considered the TARGET_ANGLE 
+   Range for an angle to be considered the TARGET_ANGLE
 */
 #define ANGLE_RANGE M_PI/24.0
 
@@ -42,7 +42,7 @@
 	This is not modified.
    @return a boiler_location struct containing the RELATIVE location of the boiler
    	Defaults to all zeros if none is found (please check for this)
- */
+*/
 boiler_location get_boiler(doubly_linked_list_node<line> * line_data_start);
 
 

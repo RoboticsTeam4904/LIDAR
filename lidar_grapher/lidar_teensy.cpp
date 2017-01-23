@@ -63,7 +63,7 @@ doubly_linked_list_node<lidar_datapoint> * get_lidar_data(int teensy){
 	doubly_linked_list_node<lidar_datapoint> * previous_node = NULL;
 
 	char trigger[1];
-	trigger[0] = '#';
+	trigger[0] = '1';
 	write(teensy, trigger, 1);
 
 	string dataset = "";
