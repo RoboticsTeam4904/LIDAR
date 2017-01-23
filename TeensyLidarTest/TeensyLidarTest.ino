@@ -94,7 +94,7 @@ void loop(){
   }
 
   if(Serial.available()){
-    if(Serial.read() == '#'){
+    if(Serial.read() == '1'){
       for(uint16_t i = 0; i < 360; i++){
         if(distances[i] != 0){
           for(uint8_t j = 1; j < 3; j++){                                                     
