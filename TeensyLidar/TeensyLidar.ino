@@ -212,7 +212,6 @@ void loop() {
       Serial.print("#");
     }
   }
-}
 
 /**
    Attempt to load the next byte from the LIDAR Serial
