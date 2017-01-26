@@ -1,6 +1,5 @@
 #include "line_find.h"
 
-#include <iostream>
 #include <cmath>
 
 using namespace std;
@@ -190,8 +189,10 @@ doubly_linked_list_node<line> * get_lines(doubly_linked_list_node<lidar_datapoin
 		node = end_node->next;
 	}
 
-	previous_line->next = first_line;
-	first_line->prev = previous_line;
-	
+	if(previous_line != NULL && first_line != NULL){
+		previous_line->next = first_line;
+		first_line->prev = previous_line;
+	}
+
 	return first_line;
 }
