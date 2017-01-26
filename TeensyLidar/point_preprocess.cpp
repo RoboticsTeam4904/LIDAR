@@ -14,10 +14,10 @@ float cosins[360];
 void interpolate(uint16_t * distances) {
   for (uint16_t i = 0; i < 360; i++) {
     if (distances[i] == 0) {
-      uint16_t last_distance = distances[(i - 1) % 360];
-      uint16_t last_last_distance = distances[(i - 2) % 360];
+      uint16_t last_distance = distances[(i + 359) % 360];
+      uint16_t last_last_distance = distances[(i + 358) % 360];
       uint16_t next_distance = distances[(i + 1) % 360];
-      uint16_t next_next_distance = distances[(i + 1) % 360];
+      uint16_t next_next_distance = distances[(i + 2) % 360];
       if (last_distance != 0 && last_last_distance != 0 &&  (next_distance != 0 || next_next_distance != 0)) {
         uint16_t slope = last_last_distance - last_distance;
         if (next_distance != 0) {

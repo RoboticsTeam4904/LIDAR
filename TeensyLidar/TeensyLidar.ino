@@ -14,7 +14,7 @@ bool start;
 uint8_t last_idx;
 
 // Current data
-uint16_t distances[360];
+uint16_t * distances;
 uint16_t lidarSpeed;
 doubly_linked_list_node<lidar_datapoint> * lidar_data_start;
 doubly_linked_list_node<line> * line_data_start;
@@ -30,14 +30,15 @@ void setup() {
   Serial.begin(115200);
   Serial1.begin(115200);
   delay(1000); // wait for serial to load
+  distances = new uint16_t[360];
   init_trig();
   start = false;
   lidar_data_start = NULL;
   line_data_start = NULL;
   calculation_idx = 0;
   lidarSpeed = 0;
-  boiler.delta_x = 100;
-  boiler.delta_y = 150;
+  boiler.delta_x = 10;
+  boiler.delta_y = 10;
 }
 
 void try_load_next_byte();
@@ -78,7 +79,7 @@ void loop() {
     long timing_start = micros();
     Serial.println("calculation 1");
 #endif
-    interpolate(distances);
+    interpolate(&distances[0]);
 #ifdef TIME
     Serial.print("calculation finished: ");
     Serial.println(micros() - timing_start);
@@ -101,7 +102,6 @@ void loop() {
     else {
       calculation_idx++;
     }
-    calculation_idx = 10;
   }
   else if (calculation_idx == 3) {
 #ifdef TIME
@@ -197,7 +197,7 @@ void loop() {
     Serial.print("calculation finished: ");
     Serial.println(micros() - timing_start);
 #endif
-    calculation_idx = 1;
+    calculation_idx = 0;
   }
 
   // CAN send
@@ -207,28 +207,23 @@ void loop() {
   if (Serial.available()) {
     char request = Serial.read();
     if (request == '1') {
-      doubly_linked_list_node<lidar_datapoint> * node = lidar_data_start->next;
-      bool finished = false;
-
-      while (node != lidar_data_start && !finished) {
-        for (uint8_t j = 1; j < 3; j++) {
-          if (node->data->theta < pow(10, j)) Serial.print("0");
+      for(uint16_t i = 0; i < 360; i++){
+        if(distances[i] != 0){
+          for(uint8_t j = 1; j < 3; j++){                                                     
+            if(i < pow(10, j)) Serial.print("0");
+          }
+          Serial.print(i);
+          Serial.print(",");
+          for(uint8_t j = 1; j < 4; j++){                                                     
+            if(distances[i] < pow(10, j)) Serial.print("0");
+          }
+          Serial.println(distances[i]);
+          delayMicroseconds(2);
         }
-        Serial.print(node->data->theta);
-        Serial.print(",");
-        for (uint8_t j = 1; j < 4; j++) {
-          if (node->data->radius < pow(10, j)) Serial.print("0");
-        }
-        Serial.println(node->data->radius);
-        delayMicroseconds(2);
-        if (node == lidar_data_start->prev) {
-          finished = true;
-        }
-        node = node->next;
       }
       Serial.print("#");
     }
-    else if (request == '2') {
+    else if (request == '2' && line_data_start != NULL) {
       doubly_linked_list_node<line> * node = line_data_start->next;
       bool finished = false;
 
@@ -344,34 +339,5 @@ void load_linked_list() {
     previous_node->next = lidar_data_start;
     lidar_data_start->prev = previous_node;
   }
-}
-
-int sendLidar(byte* msg, byte* resp) {
-
-  resp[0] = boiler.delta_x & 0xff;
-  resp[1] = (boiler.delta_x >> 8) & 0xff;
-  resp[2] = boiler.delta_y & 0xff;
-  resp[3] = (boiler.delta_y >> 8) & 0xff;
-
-  for (int i = 4; i < 8; i++) {
-    resp[i] = 0;
-  }
-
-  Serial.println(boiler.delta_x);
-
-  return 1;
-}
-
-int sendLidarEncoder(byte * msg, byte * resp) {
-  resp[0] = lidarSpeed & 0xff;
-  resp[1] = (lidarSpeed >> 8) & 0xff;
-  resp[2] = (lidarSpeed >> 16) & 0xff;
-  resp[3] = (lidarSpeed >> 24) & 0xff;
-
-  for (int i = 4; i < 8; i++) {
-    resp[i] = 0;
-  }
-
-  return 1;
 }
 
