@@ -72,7 +72,6 @@ boiler_location get_boiler(doubly_linked_list_node<line> * line_data_start) {
   boiler_location location;
   location.delta_x = 0;
   location.delta_y = 0;
-  location.delta_theta = 0;
   bool finished = false;
 
   while (!finished) {
@@ -84,7 +83,6 @@ boiler_location get_boiler(doubly_linked_list_node<line> * line_data_start) {
         if (nearby) {
           location.delta_x = node->data->end_x;
           location.delta_y = node->data->end_y;
-          location.delta_theta = calculate_angle(node->data);
         }
       }
     }

@@ -27,8 +27,6 @@ int sendLidar(byte * msg, byte * resp);
 
 void setup() {
   CAN_begin();
-  CAN_add_id(0x601, &sendLidarEncoder);
-  CAN_add_id(0x602, &sendLidar);
   Serial.begin(115200);
   Serial1.begin(115200);
   delay(1000); // wait for serial to load
@@ -45,6 +43,21 @@ void setup() {
 void try_load_next_byte();
 void packet_to_array();
 void load_linked_list();
+
+void writeLongs(uint32_t id, long value1, long value2) {
+  byte * msg = new byte[8];
+
+  for (int i = 0; i < 4; i++) {
+    msg[i] = (value1 >> i * 8) & 0xFF;
+  }
+  for (int i = 0; i < 4; i++) {
+    msg[i + 4] = (value2 >> i * 8) & 0xFF;
+  }
+
+  CAN_write(id, msg);
+
+  delete msg;
+}
 
 void loop() {
   CAN_update();
@@ -187,6 +200,9 @@ void loop() {
     calculation_idx = 1;
   }
 
+  // CAN send
+  writeLongs(0x600, boiler.delta_x, boiler.delta_y);
+
   // Logging
   if (Serial.available()) {
     char request = Serial.read();
@@ -212,7 +228,7 @@ void loop() {
       }
       Serial.print("#");
     }
-    else if(request == '2'){
+    else if (request == '2') {
       doubly_linked_list_node<line> * node = line_data_start->next;
       bool finished = false;
 
@@ -342,7 +358,7 @@ int sendLidar(byte* msg, byte* resp) {
   }
 
   Serial.println(boiler.delta_x);
-  
+
   return 1;
 }
 
