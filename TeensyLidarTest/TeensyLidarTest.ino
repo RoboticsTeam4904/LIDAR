@@ -4,6 +4,7 @@ uint8_t current_packet[22];
 uint8_t subpacket_idx;
 bool start;
 uint16_t distances[360];
+uint16_t signal_strengths[360];
 uint16_t slopes[360]; // Slope 0 is 0-1, slope 1 is 1-2, etc
 uint8_t last_idx;
 
@@ -42,8 +43,11 @@ void loop() {
         error = (current_packet[data_start + 1] & 0x80) > 0;
         if (!error) {
           uint16_t distance = 0;
-          distance = ((current_packet[data_start]) | (current_packet[data_start + 1] & 0x0F) << 8);
+          distance = ((current_packet[data_start]) | (current_packet[data_start+1] & 0x0F) << 8);
           distances[angle] = distance;
+          uint16_t signal_strength = 0;
+          signal_strength = ((current_packet[data_start+2]) | (current_packet[data_start+3]) << 8);
+          signal_strengths[angle] = signal_strength;
         }
         else {
           distances[angle] = 0;
@@ -105,7 +109,12 @@ void loop() {
           for (uint8_t j = 1; j < 4; j++) {
             if (distances[i] < pow(10, j)) Serial.print("0");
           }
-          Serial.println(distances[i]);
+          Serial.print(distances[i]);
+          Serial.print(",");
+          for (uint8_t j = 1; j < 5; j++) {
+            if (signal_strengths[i] < pow(10, j)) Serial.print("0");
+          }
+          Serial.println(signal_strengths[i]);
           delayMicroseconds(2);
         }
       }

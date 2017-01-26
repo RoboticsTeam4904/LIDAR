@@ -1,11 +1,13 @@
 #ifndef __DATATYPES_H__
 #define __DATATYPES_H__
 
-#include <cstdlib>
+#include <cstdint>
 
 struct lidar_datapoint {
 	int16_t theta;
 	int16_t radius;
+
+	uint16_t signal_strength;
 
 	int16_t x;
 	int16_t y;
