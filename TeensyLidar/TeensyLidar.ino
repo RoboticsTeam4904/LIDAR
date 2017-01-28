@@ -13,6 +13,9 @@ uint8_t subpacket_idx;
 bool start;
 uint8_t last_idx;
 
+// Timing
+long LOOP_TIME = 5000; // Microseconds
+
 // Current data
 uint16_t * distances;
 uint16_t lidarSpeed;
@@ -58,7 +61,8 @@ void writeLongs(uint32_t id, long value1, long value2) {
 }
 
 void loop() {
-  CAN_update();
+  long loopStart = micros();
+
   try_load_next_byte();
 
   if (!start) {
@@ -253,6 +257,10 @@ void loop() {
       }
       Serial.print("#");
     }
+  }
+
+  if (micros() - loopStart < LOOP_TIME) {
+    delayMicroseconds(LOOP_TIME - (micros() - loopStart));
   }
 }
 
