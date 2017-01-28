@@ -18,7 +18,7 @@ long LOOP_TIME = 5000; // Microseconds
 
 // Current data
 uint16_t * distances;
-uint16_t lidarSpeed;
+long lidarSpeed;
 doubly_linked_list_node<lidar_datapoint> * lidar_data_start;
 doubly_linked_list_node<line> * line_data_start;
 boiler_location boiler;
@@ -74,6 +74,9 @@ void loop() {
       calculation_idx = 1; // Start calculation
     }
   }
+
+  writeLongs(0x607, 0, lidarSpeed);
+  Serial.println(lidarSpeed);
 
   if (calculation_idx == 1) {
 #ifdef TIME
@@ -207,16 +210,20 @@ void loop() {
   // Logging
   if (Serial.available()) {
     char request = Serial.read();
-    if (request == '1') {
-      for(uint16_t i = 0; i < 360; i++){
-        if(distances[i] != 0){
-          for(uint8_t j = 1; j < 3; j++){                                                     
-            if(i < pow(10, j)) Serial.print("0");
+    if (request == '0') {
+      Serial.println(lidarSpeed);
+      Serial.print("#");
+    }
+    else if (request == '1') {
+      for (uint16_t i = 0; i < 360; i++) {
+        if (distances[i] != 0) {
+          for (uint8_t j = 1; j < 3; j++) {
+            if (i < pow(10, j)) Serial.print("0");
           }
           Serial.print(i);
           Serial.print(",");
-          for(uint8_t j = 1; j < 4; j++){                                                     
-            if(distances[i] < pow(10, j)) Serial.print("0");
+          for (uint8_t j = 1; j < 4; j++) {
+            if (distances[i] < pow(10, j)) Serial.print("0");
           }
           Serial.println(distances[i]);
           delayMicroseconds(2);
@@ -294,7 +301,7 @@ void packet_to_array() {
   uint8_t idx = current_packet[1] - 0xA0;
   if (idx != last_idx) {
     bool error = false;
-    lidarSpeed = current_packet[2] + (current_packet[3] << 8);
+    lidarSpeed = (current_packet[2] | (current_packet[3] << 8));
     for (uint8_t i = 0; i < 4; i++) {
       uint8_t data_start = i * 4 + 4;
       uint16_t angle = idx * 4 + i;
