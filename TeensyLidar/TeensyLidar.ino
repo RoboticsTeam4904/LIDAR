@@ -22,9 +22,6 @@ boiler_location boiler;
 
 uint8_t calculation_idx;
 
-int sendLidarEncoder(byte * msg, byte * resp);
-int sendLidar(byte * msg, byte * resp);
-
 void setup() {
   CAN_begin();
   Serial.begin(115200);
