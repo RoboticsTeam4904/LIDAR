@@ -165,7 +165,12 @@ void loop() {
     Serial.print("calculation finished: ");
     Serial.println(micros() - timing_start);
 #endif
-    calculation_idx++;
+    if (line_data_start == NULL) {
+      calculation_idx = 0;
+    }
+    else {
+      calculation_idx++;
+    }
   }
   else if (calculation_idx == 8) {
 #ifdef TIME
