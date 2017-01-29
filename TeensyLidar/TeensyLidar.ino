@@ -229,8 +229,7 @@ void loop() {
           for (uint8_t j = 1; j < 4; j++) {
             if (distances[i] < pow(10, j)) Serial.print("0");
           }
-          Serial.print(distances[i]);
-          Serial.println(",00000");
+          Serial.println(distances[i]);
           delayMicroseconds(2);
         }
       }
@@ -306,10 +305,7 @@ void packet_to_array() {
   uint8_t index = current_packet[1] - 0xA0;
   if (index != last_idx) {
     bool error = false;
-    long newLidarSpeed = (long) (current_packet[3] * 256) | current_packet[2];
-    if(newLidarSpeed < lidarSpeed * 2 || lidarSpeed < 320){ // Sometimes encoder returns weird values, this filters those.
-      lidarSpeed = newLidarSpeed;
-    }
+    lidarSpeed = (long) (current_packet[3] * 256) | current_packet[2];
     for (uint8_t i = 0; i < 4; i++) {
       uint8_t data_start = i * 4 + 4;
       uint16_t angle = index * 4 + i;

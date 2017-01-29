@@ -38,7 +38,7 @@ void plot(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 	doubly_linked_list_node<lidar_datapoint> * node = lidar_data_start;
 	
 	while(node != lidar_data_start->prev){ // Caution: skips one point
-		glColor3ub(node->data->signal_strength, 256 - node->data->signal_strength, 0);
+		glColor3ub(0, 256, 0);
 		glVertex2i(cos((double) node->data->theta * M_PI/180.0f)*node->data->radius/10,
 			   -sin((double) node->data->theta * M_PI/180.0f)*node->data->radius/10);
 		node = node->next;
@@ -132,8 +132,8 @@ void process(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 		line = first_line;
 		while(!finished){
 
-			glVertex2i(line->data->start_x/9, -line->data->start_y/9);
-			glVertex2i(line->data->end_x/9, -line->data->end_y/9);
+			glVertex2i(line->data->start_x/10, -line->data->start_y/10);
+			glVertex2i(line->data->end_x/10, -line->data->end_y/10);
 
 			if(line->next == first_line){
 				finished = true;

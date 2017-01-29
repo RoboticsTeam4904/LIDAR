@@ -80,7 +80,6 @@ doubly_linked_list_node<lidar_datapoint> * get_lidar_data(int teensy){
 	uint8_t mode = 0;
 	string idx = "";
 	string radius = "";
-	string signal_strength = "";
 	for(int i = 0; i < dataset.length(); i++){
 		if(dataset[i] == '\n'){
 			mode = 0;
@@ -90,7 +89,6 @@ doubly_linked_list_node<lidar_datapoint> * get_lidar_data(int teensy){
 					previous_node->data = new lidar_datapoint;
 					previous_node->data->theta = stoi(idx);
 					previous_node->data->radius = stoi(radius);
-					previous_node->data->signal_strength = stoi(signal_strength);
 					previous_node->next = NULL;
 					previous_node->prev = NULL;
 					first_node = previous_node;
@@ -100,7 +98,6 @@ doubly_linked_list_node<lidar_datapoint> * get_lidar_data(int teensy){
 					node->data = new lidar_datapoint;
 					node->data->theta = stoi(idx);
 					node->data->radius = stoi(radius);
-					node->data->signal_strength = stoi(signal_strength);
 					node->prev = previous_node;
 					previous_node->next = node;
 					previous_node = node;
@@ -112,7 +109,6 @@ doubly_linked_list_node<lidar_datapoint> * get_lidar_data(int teensy){
 			}
 			idx = "";
 			radius = "";
-			signal_strength = "";
 		}
 		else{
 			if(dataset[i] == ','){
@@ -123,9 +119,6 @@ doubly_linked_list_node<lidar_datapoint> * get_lidar_data(int teensy){
 			}
 			else if(mode == 1){
 				radius += dataset[i];
-			}
-			else{
-				signal_strength += dataset[i];
 			}
 		}
 	}
