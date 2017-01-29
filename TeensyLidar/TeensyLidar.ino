@@ -14,7 +14,7 @@ bool start;
 uint8_t last_idx;
 
 // Timing
-long LOOP_TIME = 5000; // Microseconds
+long LOOP_TIME = 500; // Microseconds
 
 // Current data
 uint16_t * distances;
@@ -230,7 +230,8 @@ void loop() {
           for (uint8_t j = 1; j < 4; j++) {
             if (distances[i] < pow(10, j)) Serial.print("0");
           }
-          Serial.println(distances[i]);
+          Serial.print(distances[i]);
+          Serial.println(",00000");
           delayMicroseconds(2);
         }
       }
