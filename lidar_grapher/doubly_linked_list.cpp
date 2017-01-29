@@ -2,6 +2,10 @@
 #include <iostream>
 
 void lidar_datapoint_list_cleanup(doubly_linked_list_node<lidar_datapoint> * first_node){
+	if(first_node == NULL){
+		return;
+	}
+	
         doubly_linked_list_node<lidar_datapoint> * node = first_node->next;
 
 	bool finished = false;
@@ -25,6 +29,10 @@ void lidar_datapoint_list_cleanup(doubly_linked_list_node<lidar_datapoint> * fir
 }
 
 void line_list_cleanup(doubly_linked_list_node<line> * first_node){
+	if(first_node == NULL){
+		return;
+	}
+	
         doubly_linked_list_node<line> * node = first_node->next;
 
 	bool finished = false;
