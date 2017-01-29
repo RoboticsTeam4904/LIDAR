@@ -41,7 +41,7 @@ void setup() {
   boiler.delta_y = 10;
 }
 
-void try_load_next_byte();
+void try_load_next_bytes();
 void packet_to_array();
 void load_linked_list();
 
@@ -63,9 +63,9 @@ void writeLongs(uint32_t id, long value1, long value2) {
 void loop() {
   long loopStart = micros();
 
-  try_load_next_byte();
+  try_load_next_bytes();
 
-  if (!start) {
+  if (subpacket_idx == 21) {
     packet_to_array();
   }
 
@@ -281,8 +281,8 @@ void loop() {
    Attempt to load the next byte from the LIDAR Serial
    into the packet array
 */
-void try_load_next_byte() {
-  if (Serial1.available()) {
+void try_load_next_bytes() {
+  while (Serial1.available()) {
     uint8_t b = Serial1.read();
     if (b == 0xFA && !start) {
       subpacket_idx = 0;
