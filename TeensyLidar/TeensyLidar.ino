@@ -76,7 +76,6 @@ void loop() {
   }
 
   writeLongs(0x607, 0, lidarSpeed);
-  Serial.println(lidarSpeed);
 
   if (calculation_idx == 1) {
 #ifdef TIME
@@ -304,13 +303,16 @@ void try_load_next_bytes() {
    Update the distance array with the latest packet
 */
 void packet_to_array() {
-  uint8_t idx = current_packet[1] - 0xA0;
-  if (idx != last_idx) {
+  uint8_t index = current_packet[1] - 0xA0;
+  if (index != last_idx) {
     bool error = false;
-    lidarSpeed = (current_packet[2] | (current_packet[3] << 8));
+    long newLidarSpeed = (long) (current_packet[3] * 256) | current_packet[2];
+    if(newLidarSpeed < lidarSpeed * 2 || lidarSpeed < 320){ // Sometimes encoder returns weird values, this filters those.
+      lidarSpeed = newLidarSpeed;
+    }
     for (uint8_t i = 0; i < 4; i++) {
       uint8_t data_start = i * 4 + 4;
-      uint16_t angle = idx * 4 + i;
+      uint16_t angle = index * 4 + i;
       error = (current_packet[data_start + 1] & 0x80) > 0;
       if (!error) {
         uint16_t distance = 0;
@@ -321,7 +323,7 @@ void packet_to_array() {
         distances[angle] = 0;
       }
     }
-    last_idx = idx;
+    last_idx = index;
   }
 }
 
