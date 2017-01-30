@@ -14,7 +14,7 @@ bool start;
 uint8_t last_idx;
 
 // Timing
-long LOOP_TIME = 500; // Microseconds
+long LOOP_TIME = 5000; // Microseconds
 
 // Current data
 uint16_t * distances;
@@ -305,7 +305,7 @@ void packet_to_array() {
   uint8_t index = current_packet[1] - 0xA0;
   if (index != last_idx) {
     bool error = false;
-    lidarSpeed = (long) (current_packet[3] * 256) | current_packet[2];
+    lidarSpeed = (long) (current_packet[3] << 8) | current_packet[2];
     for (uint8_t i = 0; i < 4; i++) {
       uint8_t data_start = i * 4 + 4;
       uint16_t angle = index * 4 + i;
