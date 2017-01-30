@@ -42,7 +42,7 @@ void loop() {
         error = (current_packet[data_start + 1] & 0x80) > 0;
         if (!error) {
           uint16_t distance = 0;
-          distance = ((current_packet[data_start]) | (current_packet[data_start+1] & 0x0F) << 8);
+          distance = ((current_packet[data_start]) | (current_packet[data_start + 1] & 0x0F) << 8);
           distances[angle] = distance;
         }
         else {
