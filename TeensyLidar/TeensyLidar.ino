@@ -73,8 +73,6 @@ void loop() {
     }
   }
 
-  writeLongs(0x607, 0, lidarSpeed);
-
   if (calculation_idx == 1) {
 #ifdef TIME
     long timing_start = micros();
@@ -163,7 +161,7 @@ void loop() {
     Serial.println(micros() - timing_start);
 #endif
     if (line_data_start == NULL) {
-      calculation_idx = 0;
+      calculation_idx = 10;
     }
     else {
       calculation_idx++;
@@ -208,6 +206,7 @@ void loop() {
 
   // CAN send
   writeLongs(0x600, boiler.delta_x, boiler.delta_y);
+  writeLongs(0x607, 0, lidarSpeed);
 
   // Logging
   if (Serial.available()) {
