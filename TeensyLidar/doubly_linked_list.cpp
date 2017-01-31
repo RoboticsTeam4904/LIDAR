@@ -2,10 +2,15 @@
 
 void lidar_datapoint_list_cleanup(doubly_linked_list_node<lidar_datapoint> * first_node) {
   doubly_linked_list_node<lidar_datapoint> * node = first_node->next;
+  if (first_node->next == first_node) {
+    delete node->data;
+    delete node;
+    return;
+  }
 
   bool finished = false;
 
-  while (node != NULL && !finished) {
+  while (!finished) {
     delete node->data;
     node = node->next;
     if (node == first_node) {
@@ -25,10 +30,15 @@ void lidar_datapoint_list_cleanup(doubly_linked_list_node<lidar_datapoint> * fir
 
 void line_list_cleanup(doubly_linked_list_node<line> * first_node) {
   doubly_linked_list_node<line> * node = first_node->next;
+  if (first_node->next == first_node) {
+    delete node->data;
+    delete node;
+    return;
+  }
 
   bool finished = false;
 
-  while (node != NULL && !finished) {
+  while (!finished) {
     delete node->data;
     node = node->next;
     if (node == first_node) {

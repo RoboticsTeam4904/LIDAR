@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <FlexCAN.h>
 #include <TeensyCANBase.h>
 
@@ -7,11 +8,23 @@
 #include "point_preprocess.h"
 #include "datatypes.h"
 
+/**
+   Utility to get the amount of free RAM
+   From SDFat
+*/
+extern "C" char* sbrk(int incr);
+int FreeRam() {
+  char top;
+  return &top - reinterpret_cast<char*>(sbrk(0));
+}
+
 // Packet loading data
 uint8_t current_packet[22];
 uint8_t subpacket_idx;
 bool start;
 uint8_t last_idx;
+
+#define TIME 1
 
 // Avoiding as-fast-as-possible loops, which increase CAN utilization too much
 long LOOP_TIME = 10000; // Microseconds
@@ -41,6 +54,8 @@ void setup() {
   lidarSpeed = 0;
   boiler.delta_x = 0;
   boiler.delta_y = 0;
+  Serial.print("Setup: ");
+  Serial.println(FreeRam());
 }
 
 void try_load_next_bytes();
@@ -67,7 +82,7 @@ void loop() {
 
   try_load_next_bytes();
 
-  if (last_idx == 0x59) {
+  if (subpacket_idx == 21) {
     if (calculation_idx == 0) {
       calculation_idx = 1; // Start calculation
     }
@@ -81,7 +96,9 @@ void loop() {
     interpolate(&distances[0]);
 #ifdef TIME
     Serial.print("calculation finished: ");
-    Serial.println(micros() - timing_start);
+    Serial.print(micros() - timing_start);
+    Serial.print("\t");
+    Serial.println(FreeRam());
 #endif
     calculation_idx++;
   }
@@ -93,7 +110,9 @@ void loop() {
     load_linked_list();
 #ifdef TIME
     Serial.print("calculation finished: ");
-    Serial.println(micros() - timing_start);
+    Serial.print(micros() - timing_start);
+    Serial.print("\t");
+    Serial.println(FreeRam());
 #endif
     if (lidar_data_start == NULL) {
       calculation_idx = 0;
@@ -110,7 +129,9 @@ void loop() {
     blur_points(lidar_data_start);
 #ifdef TIME
     Serial.print("calculation finished: ");
-    Serial.println(micros() - timing_start);
+    Serial.print(micros() - timing_start);
+    Serial.print("\t");
+    Serial.println(FreeRam());
 #endif
     calculation_idx++;
   }
@@ -122,7 +143,9 @@ void loop() {
     blur_points(lidar_data_start);
 #ifdef TIME
     Serial.print("calculation finished: ");
-    Serial.println(micros() - timing_start);
+    Serial.print(micros() - timing_start);
+    Serial.print("\t");
+    Serial.println(FreeRam());
 #endif
     calculation_idx++;
   }
@@ -134,7 +157,9 @@ void loop() {
     blur_points(lidar_data_start);
 #ifdef TIME
     Serial.print("calculation finished: ");
-    Serial.println(micros() - timing_start);
+    Serial.print(micros() - timing_start);
+    Serial.print("\t");
+    Serial.println(FreeRam());
 #endif
     calculation_idx++;
   }
@@ -146,7 +171,9 @@ void loop() {
     add_cartesians(lidar_data_start);
 #ifdef TIME
     Serial.print("calculation finished: ");
-    Serial.println(micros() - timing_start);
+    Serial.print(micros() - timing_start);
+    Serial.print("\t");
+    Serial.println(FreeRam());
 #endif
     calculation_idx++;
   }
@@ -158,7 +185,9 @@ void loop() {
     line_data_start = get_lines(lidar_data_start);
 #ifdef TIME
     Serial.print("calculation finished: ");
-    Serial.println(micros() - timing_start);
+    Serial.print(micros() - timing_start);
+    Serial.print("\t");
+    Serial.println(FreeRam());
 #endif
     if (line_data_start == NULL) {
       calculation_idx = 10;
@@ -175,7 +204,9 @@ void loop() {
     boiler = get_boiler(line_data_start);
 #ifdef TIME
     Serial.print("calculation finished: ");
-    Serial.println(micros() - timing_start);
+    Serial.print(micros() - timing_start);
+    Serial.print("\t");
+    Serial.println(FreeRam());
 #endif
     calculation_idx++;
   }
@@ -187,7 +218,9 @@ void loop() {
     line_list_cleanup(line_data_start);
 #ifdef TIME
     Serial.print("calculation finished: ");
-    Serial.println(micros() - timing_start);
+    Serial.print(micros() - timing_start);
+    Serial.print("\t");
+    Serial.println(FreeRam());
 #endif
     calculation_idx++;
   }
@@ -199,7 +232,9 @@ void loop() {
     lidar_datapoint_list_cleanup(lidar_data_start);
 #ifdef TIME
     Serial.print("calculation finished: ");
-    Serial.println(micros() - timing_start);
+    Serial.print(micros() - timing_start);
+    Serial.print("\t");
+    Serial.println(FreeRam());
 #endif
     calculation_idx = 0;
   }

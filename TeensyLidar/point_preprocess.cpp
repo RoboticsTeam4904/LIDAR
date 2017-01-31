@@ -78,10 +78,10 @@ void blur_points(doubly_linked_list_node<lidar_datapoint> * lidar_data_start) {
                               prev_datapoint) / 4;
       }
     }
+    node = node->next;
     if (node == lidar_data_start->prev) {
       finished = true;
     }
-    node = node->next;
   }
 }
 
