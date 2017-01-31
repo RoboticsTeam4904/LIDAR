@@ -13,8 +13,10 @@ uint8_t subpacket_idx;
 bool start;
 uint8_t last_idx;
 
-// Timing
-long LOOP_TIME = 5000; // Microseconds
+// Avoiding as-fast-as-possible loops, which increase CAN utilization too much
+long LOOP_TIME = 10000; // Microseconds
+long TIMEOUT = 10000;
+long lastLidarData;
 
 // Current data
 uint16_t * distances;
@@ -37,8 +39,8 @@ void setup() {
   line_data_start = NULL;
   calculation_idx = 0;
   lidarSpeed = 0;
-  boiler.delta_x = 10;
-  boiler.delta_y = 10;
+  boiler.delta_x = 0;
+  boiler.delta_y = 0;
 }
 
 void try_load_next_bytes();
@@ -64,10 +66,6 @@ void loop() {
   long loopStart = micros();
 
   try_load_next_bytes();
-
-  if (subpacket_idx == 21) {
-    packet_to_array();
-  }
 
   if (last_idx == 0x59) {
     if (calculation_idx == 0) {
@@ -273,6 +271,10 @@ void loop() {
   if (micros() - loopStart < LOOP_TIME) {
     delayMicroseconds(LOOP_TIME - (micros() - loopStart));
   }
+
+  if (micros() - lastLidarData < TIMEOUT) {
+    lidarSpeed = 0;
+  }
 }
 
 /**
@@ -281,6 +283,7 @@ void loop() {
 */
 void try_load_next_bytes() {
   while (Serial1.available()) {
+    lastLidarData = micros();
     uint8_t b = Serial1.read();
     if (b == 0xFA && !start) {
       subpacket_idx = 0;
@@ -293,6 +296,7 @@ void try_load_next_bytes() {
       current_packet[subpacket_idx] = b;
       if (subpacket_idx == 21) {
         start = false;
+        packet_to_array();
       }
     }
   }
@@ -305,7 +309,8 @@ void packet_to_array() {
   uint8_t index = current_packet[1] - 0xA0;
   if (index != last_idx) {
     bool error = false;
-    lidarSpeed = (long) (current_packet[3] << 8) | current_packet[2];
+    double rawLidarSpeed = ((double) ((current_packet[3] << 8) | current_packet[2])) / 64.0;
+    lidarSpeed = (long) (rawLidarSpeed * 1000.0);
     for (uint8_t i = 0; i < 4; i++) {
       uint8_t data_start = i * 4 + 4;
       uint16_t angle = index * 4 + i;
