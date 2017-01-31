@@ -1,56 +1,47 @@
 #include "doubly_linked_list.h"
-#include <iostream>
 
-void lidar_datapoint_list_cleanup(doubly_linked_list_node<lidar_datapoint> * first_node){
-	if(first_node == NULL){
-		return;
-	}
-	
-        doubly_linked_list_node<lidar_datapoint> * node = first_node->next;
+void lidar_datapoint_list_cleanup(doubly_linked_list_node<lidar_datapoint> * first_node) {
+  doubly_linked_list_node<lidar_datapoint> * node = first_node->next;
 
-	bool finished = false;
+  bool finished = false;
 
-        while(node != NULL && !finished){
-		delete node->data;
-		node = node->next;
-		if(node == first_node){
-			finished = true;
-		}
-		else{
-			delete node->prev;
-		}
-        }
+  while (node != NULL && !finished) {
+    delete node->data;
+    node = node->next;
+    if (node == first_node) {
+      finished = true;
+    }
+    else {
+      delete node->prev;
+    }
+  }
 
-	delete node->data;
-	delete node->prev;
-	delete node;
+  delete node->data;
+  delete node->prev;
+  delete node;
 
-        first_node = NULL;
+  first_node = NULL;
 }
 
-void line_list_cleanup(doubly_linked_list_node<line> * first_node){
-	if(first_node == NULL){
-		return;
-	}
-	
-        doubly_linked_list_node<line> * node = first_node->next;
+void line_list_cleanup(doubly_linked_list_node<line> * first_node) {
+  doubly_linked_list_node<line> * node = first_node->next;
 
-	bool finished = false;
+  bool finished = false;
 
-        while(node != NULL && !finished){
-		delete node->data;
-		node = node->next;
-		if(node == first_node){
-			finished = true;
-		}
-		else{
-			delete node->prev;
-		}
-        }
+  while (node != NULL && !finished) {
+    delete node->data;
+    node = node->next;
+    if (node == first_node) {
+      finished = true;
+    }
+    else {
+      delete node->prev;
+    }
+  }
 
-	delete node->data;
-	delete node->prev;
-	delete node;
+  delete node->data;
+  delete node->prev;
+  delete node;
 
-        first_node = NULL;
+  first_node = NULL;
 }

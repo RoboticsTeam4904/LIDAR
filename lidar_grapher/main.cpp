@@ -24,6 +24,7 @@
 #include "datatypes.h"
 #include "doubly_linked_list.h"
 #include "boiler_find.h"
+#include "point_preprocess.h"
 
 using namespace std;
 
@@ -38,7 +39,7 @@ void plot(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 	doubly_linked_list_node<lidar_datapoint> * node = lidar_data_start;
 	
 	while(node != lidar_data_start->prev){ // Caution: skips one point
-		glColor3ub(0, 256, 0);
+		glColor3f(0, 1.0f, 0);
 		glVertex2i(cos((double) node->data->theta * M_PI/180.0f)*node->data->radius/10,
 			   -sin((double) node->data->theta * M_PI/180.0f)*node->data->radius/10);
 		node = node->next;
@@ -102,13 +103,13 @@ void process(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 		cout << "Find the boiler:\t" << time_span.count() << "\n";
 #endif
 	
+#ifdef GUI
 		// Draw boiler
 		if(target.delta_x != 0 && target.delta_y != 0){
 			cout << target.delta_x << "," << target.delta_y << "\n";
 		}
 
-#ifdef GUI
-		if(target.delta_x != 0 && target.delta_y != 0 && target.delta_theta != 0){
+		if(target.delta_x != 0 && target.delta_y != 0){
 			glBegin(GL_LINES);
 			glColor3f(0.5f, 0.5f, 1.0f);
 			int16_t target_x = target.delta_x / 10;
@@ -119,34 +120,33 @@ void process(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 			glVertex2i(target_x, target_y-10);
 			glEnd();
 		}
-	}
+		// Draw lines
+		glBegin(GL_LINES);
+		glColor3f(1.0f, 0.5f, 0.5f);
 
-	// Draw lines
- 	glBegin(GL_LINES);
-	glColor3f(1.0f, 0.5f, 0.5f);
+		if(first_line != NULL){
+			doubly_linked_list_node<line> * line;
 
-	if(first_line != NULL){
-		doubly_linked_list_node<line> * line;
+			bool finished = false;
+			line = first_line;
+			while(!finished){
 
-		bool finished = false;
-		line = first_line;
-		while(!finished){
+				glVertex2i(line->data->start_x/10, -line->data->start_y/10);
+				glVertex2i(line->data->end_x/10, -line->data->end_y/10);
 
-			glVertex2i(line->data->start_x/10, -line->data->start_y/10);
-			glVertex2i(line->data->end_x/10, -line->data->end_y/10);
-
-			if(line->next == first_line){
-				finished = true;
+				if(line->next == first_line){
+					finished = true;
+				}
+				line = line->next;
 			}
-			line = line->next;
-		}
 		
-	// Delete lines
-	line_list_cleanup(first_line);
-	}
+		}
 
-	glEnd();
+		glEnd();
 #endif
+		// Delete lines
+		line_list_cleanup(first_line);
+	}
 }
 
 /**
@@ -205,6 +205,7 @@ int read_teensy(int argc, char * argv[]){
 
 			// Blur points
 			blur_points(lidar_data_start);
+			add_cartesians(lidar_data_start);
 	
 #ifdef TIME
 			chrono::high_resolution_clock::time_point end = chrono::high_resolution_clock::now();
@@ -300,6 +301,7 @@ int read_file(int argc, char * argv[]){
 
 	// Blur points
 	blur_points(first_node);
+	add_cartesians(first_node);
 	
 #ifdef TIME
 	chrono::high_resolution_clock::time_point end = chrono::high_resolution_clock::now();
@@ -330,6 +332,7 @@ int read_file(int argc, char * argv[]){
 }
 
 int main(int argc, char * argv[]){
+	init_trig();
 	if(argc < 3){
 		cout << "Usage:\n./graph_lidar [type] [serial port | file] [baud rate (optional)]\n";
 		return -1;
@@ -340,7 +343,10 @@ int main(int argc, char * argv[]){
 		return read_teensy(argc, argv);
 	}
 	else if(type == "file"){
-		return read_file(argc, argv);
+		for(int i = 0; i < 10; i++){
+			read_file(argc, argv);
+		}
+		return 0;
 	}
 	
 	return 0;

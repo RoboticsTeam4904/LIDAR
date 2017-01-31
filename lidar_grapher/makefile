@@ -1,13 +1,14 @@
 CPP=g++
 
 TEENSY=lidar_teensy.cpp
+POINTS=point_preprocess.cpp math_util.cpp
 LINES=line_find.cpp
 LIST=doubly_linked_list.cpp
 BOILER=boiler_find.cpp
 MAIN=main.cpp
 EXE=lidar_grapher
 
-CFLAGS=--std=c++0x
+CFLAGS=--std=c++0x -g
 
 ifeq ($(TIME),1)
 	CFLAGS +=-DTIME
@@ -31,8 +32,9 @@ ifeq ($(UNAME_S),Darwin)
 endif
 
 
-build: $(TEENSY) $(LINES) $(LIST) $(BOILER) $(MAIN)
+build: $(TEENSY) $(POINTS) $(LINES) $(LIST) $(BOILER) $(MAIN)
 	$(CPP) -c -fPIC $(TEENSY) $(INCLUDES) $(LINKS) $(CFLAGS)
+	$(CPP) -c -fPIC $(POINTS) $(INCLUDES) $(LINKS) $(CFLAGS)
 	$(CPP) -c -fPIC $(LINES) $(INCLUDES) $(LINKS) $(CFLAGS)
 	$(CPP) -c -fPIC $(LIST) $(INCLUDES) $(LINKS) $(CFLAGS)
 	$(CPP) -c -fPIC $(BOILER) $(INCLUDES) $(LINKS) $(CFLAGS)
