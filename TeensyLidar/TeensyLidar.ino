@@ -24,8 +24,6 @@ uint8_t subpacket_idx;
 bool start;
 uint8_t last_idx;
 
-#define TIME 1
-
 // Avoiding as-fast-as-possible loops, which increase CAN utilization too much
 long LOOP_TIME = 10000; // Microseconds
 long TIMEOUT = 10000;
@@ -33,7 +31,7 @@ long lastLidarData;
 
 // Current data
 uint16_t * distances;
-long lidarSpeed;
+long lidar_speed;
 doubly_linked_list_node<lidar_datapoint> * lidar_data_start;
 doubly_linked_list_node<line> * line_data_start;
 boiler_location boiler;
@@ -51,11 +49,9 @@ void setup() {
   lidar_data_start = NULL;
   line_data_start = NULL;
   calculation_idx = 0;
-  lidarSpeed = 0;
+  lidar_speed = 0;
   boiler.delta_x = 0;
   boiler.delta_y = 0;
-  Serial.print("Setup: ");
-  Serial.println(FreeRam());
 }
 
 void try_load_next_bytes();
@@ -82,38 +78,30 @@ void loop() {
 
   try_load_next_bytes();
 
-  if (subpacket_idx == 21) {
+  if (subpacket_idx == 21 && lidar_speed > 180000) {
     if (calculation_idx == 0) {
       calculation_idx = 1; // Start calculation
     }
   }
 
+  // CAN send
+  writeLongs(0x600, boiler.delta_x, boiler.delta_y);
+  writeLongs(0x607, 0, lidar_speed);
+
+#ifdef TIME
+  long timing_start = micros();
+  if (calculation_idx != 0) {
+    Serial.print("calculation ");
+    Serial.println(calculation_idx);
+    Serial.flush(); // If code crashes, print will make it
+  }
+#endif
   if (calculation_idx == 1) {
-#ifdef TIME
-    long timing_start = micros();
-    Serial.println("calculation 1");
-#endif
     interpolate(&distances[0]);
-#ifdef TIME
-    Serial.print("calculation finished: ");
-    Serial.print(micros() - timing_start);
-    Serial.print("\t");
-    Serial.println(FreeRam());
-#endif
     calculation_idx++;
   }
   else if (calculation_idx == 2) {
-#ifdef TIME
-    long timing_start = micros();
-    Serial.println("calculation 2");
-#endif
     load_linked_list();
-#ifdef TIME
-    Serial.print("calculation finished: ");
-    Serial.print(micros() - timing_start);
-    Serial.print("\t");
-    Serial.println(FreeRam());
-#endif
     if (lidar_data_start == NULL) {
       calculation_idx = 0;
     }
@@ -122,73 +110,23 @@ void loop() {
     }
   }
   else if (calculation_idx == 3) {
-#ifdef TIME
-    long timing_start = micros();
-    Serial.println("calculation 3");
-#endif
     blur_points(lidar_data_start);
-#ifdef TIME
-    Serial.print("calculation finished: ");
-    Serial.print(micros() - timing_start);
-    Serial.print("\t");
-    Serial.println(FreeRam());
-#endif
     calculation_idx++;
   }
   else if (calculation_idx == 4) {
-#ifdef TIME
-    long timing_start = micros();
-    Serial.println("calculation 4");
-#endif
     blur_points(lidar_data_start);
-#ifdef TIME
-    Serial.print("calculation finished: ");
-    Serial.print(micros() - timing_start);
-    Serial.print("\t");
-    Serial.println(FreeRam());
-#endif
     calculation_idx++;
   }
   else if (calculation_idx == 5) {
-#ifdef TIME
-    long timing_start = micros();
-    Serial.println("calculation 5");
-#endif
     blur_points(lidar_data_start);
-#ifdef TIME
-    Serial.print("calculation finished: ");
-    Serial.print(micros() - timing_start);
-    Serial.print("\t");
-    Serial.println(FreeRam());
-#endif
     calculation_idx++;
   }
   else if (calculation_idx == 6) {
-#ifdef TIME
-    Serial.println("calculation 6");
-    long timing_start = micros();
-#endif
     add_cartesians(lidar_data_start);
-#ifdef TIME
-    Serial.print("calculation finished: ");
-    Serial.print(micros() - timing_start);
-    Serial.print("\t");
-    Serial.println(FreeRam());
-#endif
     calculation_idx++;
   }
   else if (calculation_idx == 7) {
-#ifdef TIME
-    Serial.println("calculation 7");
-    long timing_start = micros();
-#endif
     line_data_start = get_lines(lidar_data_start);
-#ifdef TIME
-    Serial.print("calculation finished: ");
-    Serial.print(micros() - timing_start);
-    Serial.print("\t");
-    Serial.println(FreeRam());
-#endif
     if (line_data_start == NULL) {
       calculation_idx = 10;
     }
@@ -197,57 +135,31 @@ void loop() {
     }
   }
   else if (calculation_idx == 8) {
-#ifdef TIME
-    long timing_start = micros();
-    Serial.println("calculation 8");
-#endif
     boiler = get_boiler(line_data_start);
-#ifdef TIME
-    Serial.print("calculation finished: ");
-    Serial.print(micros() - timing_start);
-    Serial.print("\t");
-    Serial.println(FreeRam());
-#endif
     calculation_idx++;
   }
   else if (calculation_idx == 9) {
-#ifdef TIME
-    long timing_start = micros();
-    Serial.println("calculation 9");
-#endif
     line_list_cleanup(line_data_start);
-#ifdef TIME
-    Serial.print("calculation finished: ");
-    Serial.print(micros() - timing_start);
-    Serial.print("\t");
-    Serial.println(FreeRam());
-#endif
     calculation_idx++;
   }
   else if (calculation_idx == 10) {
-#ifdef TIME
-    long timing_start = micros();
-    Serial.println("calculation 10");
-#endif
     lidar_datapoint_list_cleanup(lidar_data_start);
+    calculation_idx = 0;
+  }
 #ifdef TIME
+  if (calculation_idx != 0) {
     Serial.print("calculation finished: ");
     Serial.print(micros() - timing_start);
     Serial.print("\t");
     Serial.println(FreeRam());
-#endif
-    calculation_idx = 0;
   }
-
-  // CAN send
-  writeLongs(0x600, boiler.delta_x, boiler.delta_y);
-  writeLongs(0x607, 0, lidarSpeed);
+#endif
 
   // Logging
   if (Serial.available()) {
     char request = Serial.read();
     if (request == '0') {
-      Serial.println(lidarSpeed);
+      Serial.println(lidar_speed);
       Serial.print("#");
     }
     else if (request == '1') {
@@ -307,7 +219,9 @@ void loop() {
   }
 
   if (micros() - lastLidarData < TIMEOUT) {
-    lidarSpeed = 0;
+    lidar_speed = 0;
+    boiler.delta_x = 0;
+    boiler.delta_y = 0;
   }
 }
 
@@ -344,10 +258,13 @@ void packet_to_array() {
   if (index != last_idx) {
     bool error = false;
     double rawLidarSpeed = ((double) ((current_packet[3] << 8) | current_packet[2])) / 64.0;
-    lidarSpeed = (long) (rawLidarSpeed * 1000.0);
+    lidar_speed = (long) (rawLidarSpeed * 1000.0);
     for (uint8_t i = 0; i < 4; i++) {
       uint8_t data_start = i * 4 + 4;
       uint16_t angle = index * 4 + i;
+      if (angle > 359) {
+        return;
+      }
       error = (current_packet[data_start + 1] & 0x80) > 0;
       if (!error) {
         uint16_t distance = 0;
@@ -393,6 +310,9 @@ void load_linked_list() {
   if (previous_node != NULL) {
     previous_node->next = lidar_data_start;
     lidar_data_start->prev = previous_node;
+  }
+  else {
+    lidar_data_start = NULL;
   }
 }
 
