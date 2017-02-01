@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include <FlexCAN.h>
 #include <TeensyCANBase.h>
 
@@ -8,15 +7,19 @@
 #include "point_preprocess.h"
 #include "datatypes.h"
 
+
+#ifdef TIME
+#include <stdlib.h>
 /**
    Utility to get the amount of free RAM
    From SDFat
 */
 extern "C" char* sbrk(int incr);
-int FreeRam() {
+int get_free_ram() {
   char top;
   return &top - reinterpret_cast<char*>(sbrk(0));
 }
+#endif
 
 // Packet loading data
 uint8_t current_packet[22];
@@ -27,7 +30,7 @@ uint8_t last_idx;
 // Avoiding as-fast-as-possible loops, which increase CAN utilization too much
 long LOOP_TIME = 10000; // Microseconds
 long TIMEOUT = 10000;
-long lastLidarData;
+long last_lidar_data;
 
 // Current data
 uint16_t * distances;
@@ -151,7 +154,7 @@ void loop() {
     Serial.print("calculation finished: ");
     Serial.print(micros() - timing_start);
     Serial.print("\t");
-    Serial.println(FreeRam());
+    Serial.println(get_free_ram());
   }
 #endif
 
@@ -218,7 +221,7 @@ void loop() {
     delayMicroseconds(LOOP_TIME - (micros() - loopStart));
   }
 
-  if (micros() - lastLidarData < TIMEOUT) {
+  if (micros() - last_lidar_data < TIMEOUT) {
     lidar_speed = 0;
     boiler.delta_x = 0;
     boiler.delta_y = 0;
@@ -231,7 +234,7 @@ void loop() {
 */
 void try_load_next_bytes() {
   while (Serial1.available()) {
-    lastLidarData = micros();
+    last_lidar_data = micros();
     uint8_t b = Serial1.read();
     if (b == 0xFA && !start) {
       subpacket_idx = 0;
@@ -257,13 +260,12 @@ void packet_to_array() {
   uint8_t index = current_packet[1] - 0xA0;
   if (index != last_idx) {
     bool error = false;
-    double rawLidarSpeed = ((double) ((current_packet[3] << 8) | current_packet[2])) / 64.0;
-    lidar_speed = (long) (rawLidarSpeed * 1000.0);
+    lidar_speed = (long) (((double) ((current_packet[3] << 8) | current_packet[2])) * 15.625);
     for (uint8_t i = 0; i < 4; i++) {
       uint8_t data_start = i * 4 + 4;
       uint16_t angle = index * 4 + i;
       if (angle > 359) {
-        return;
+        return; // If the angle is out of range, the packet is corrupted. Moving on.
       }
       error = (current_packet[data_start + 1] & 0x80) > 0;
       if (!error) {
