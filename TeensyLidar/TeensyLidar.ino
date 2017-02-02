@@ -28,7 +28,7 @@ bool start;
 uint8_t last_idx;
 
 // Avoiding as-fast-as-possible loops, which increase CAN utilization too much
-long LOOP_TIME = 10000; // Microseconds
+long LOOP_TIME = 5000; // Microseconds
 long TIMEOUT = 10000;
 long last_lidar_data;
 
