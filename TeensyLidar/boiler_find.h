@@ -24,7 +24,7 @@
    Larger numbers increase sensitivity, smaller numbers
    decrease sensitivity
 */
-#define ENDPOINT_DIVISOR 128
+#define ENDPOINT_DIVISOR 64
 /**
    Range for an angle to be considered the TARGET_ANGLE
 */
