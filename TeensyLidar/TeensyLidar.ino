@@ -28,7 +28,10 @@ bool start;
 uint8_t last_idx;
 
 // Avoiding as-fast-as-possible loops, which increase CAN utilization too much
-long LOOP_TIME = 10000; // Microseconds
+long LOOP_TIME = 5000; // Microseconds
+long last_can_loop;
+
+// Timeout for encoder
 long TIMEOUT = 10000;
 long last_lidar_data;
 
@@ -55,6 +58,7 @@ void setup() {
   lidar_speed = 0;
   boiler.delta_x = 0;
   boiler.delta_y = 0;
+  last_can_loop = 0;
 }
 
 void try_load_next_bytes();
@@ -81,15 +85,21 @@ void loop() {
 
   try_load_next_bytes();
 
-  if (subpacket_idx == 21 && lidar_speed > 180000) {
+  if (lidar_speed > 180000) {
     if (calculation_idx == 0) {
       calculation_idx = 1; // Start calculation
     }
   }
 
   // CAN send
-  writeLongs(0x600, boiler.delta_x, boiler.delta_y);
-  writeLongs(0x607, 0, lidar_speed);
+  if (last_can_loop > 1) {
+    writeLongs(0x600, boiler.delta_x, boiler.delta_y);
+    writeLongs(0x607, 0, lidar_speed);
+    last_can_loop = 0;
+  }
+  else {
+    last_can_loop++;
+  }
 
 #ifdef TIME
   long timing_start = micros();
@@ -215,6 +225,22 @@ void loop() {
       }
       Serial.print("#");
     }
+    else if (request == '3') {
+      if(boiler.delta_x < 0) Serial.print("-");
+      else Serial.print("0");
+      for (uint8_t j = 1; j < 4; j++) {
+        if (abs(boiler.delta_x) < pow(10, j)) Serial.print("0");
+      }
+      Serial.print(abs(boiler.delta_x));
+      Serial.print(",");
+      if(boiler.delta_y < 0) Serial.print("-");
+      else Serial.print("0");
+      for (uint8_t j = 1; j < 4; j++) {
+        if (abs(boiler.delta_y) < pow(10, j)) Serial.print("0");
+      }
+      Serial.println(abs(boiler.delta_y));
+      Serial.print("#");
+    }
   }
 
   if (micros() - loopStart < LOOP_TIME) {
@@ -223,8 +249,6 @@ void loop() {
 
   if (micros() - last_lidar_data < TIMEOUT) {
     lidar_speed = 0;
-    boiler.delta_x = 0;
-    boiler.delta_y = 0;
   }
 }
 
