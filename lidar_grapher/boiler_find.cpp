@@ -1,4 +1,5 @@
 #include "boiler_find.h"
+#include "math_util.h"
 
 #include <cmath>
 
@@ -8,7 +9,7 @@
    @return the angle of the line in radians
 */
 float calculate_angle(line * line1) {
-  return atan2(line1->start_y - line1->end_y, line1->start_x - line1->end_x);
+	return atan2(line1->start_y - line1->end_y, line1->start_x - line1->end_x);
 }
 
 /**
@@ -19,11 +20,11 @@ float calculate_angle(line * line1) {
    in radians.
 */
 float get_angle(line * line1, line * line2) {
-  float angle = calculate_angle(line2) - calculate_angle(line1);
-  if (angle < 0.0f) {
-    angle = angle + M_PI * 2.0;
-  }
-  return angle;
+	float angle = calculate_angle(line2) - calculate_angle(line1);
+	if (angle < 0.0f) {
+		angle = angle + M_PI * 2.0;
+	}
+	return angle;
 }
 
 /**
@@ -33,25 +34,11 @@ float get_angle(line * line1, line * line2) {
    of the start of line2, false otherwise
 */
 bool test_distance(line * line1, line * line2) {
-  uint32_t point_distance = (line1->end_x * line1->end_x + line1->end_y * line1->end_y)
-                            / ENDPOINT_DIVISOR;
+	int16_t x_distance = line1->end_x - line2->start_x;
+	int16_t y_distance = line1->end_y - line2->start_y;
+	uint32_t distance = x_distance * x_distance + y_distance * y_distance;
 
-  int16_t x_distance = line1->end_x - line2->start_x;
-  int16_t y_distance = line1->end_y - line2->start_y;
-  uint32_t distance = x_distance * x_distance + y_distance * y_distance;
-
-  return distance < point_distance;
-}
-
-/**
-   Measures the length of the line.
-   Warning: contains sqrt, expensive to compute
-   @return the length of line1, calculated via pythagorean theorum
-*/
-uint16_t line_length(line * line1) {
-  int16_t x_delta = line1->start_x - line1->end_x;
-  int16_t y_delta = line1->start_y - line1->end_y;
-  return sqrt(x_delta * x_delta + y_delta * y_delta);
+	return distance < ENDPOINT_DISTANCE * ENDPOINT_DISTANCE;
 }
 
 /**
@@ -61,36 +48,85 @@ uint16_t line_length(line * line1) {
    Note that this algorithm will fail if multiple 135* angles
    are within lidar vision.
    @param
-   	The first node in a doubly linked list of lines.
-	This is not modified.
+   The first node in a doubly linked list of lines.
+   This is not modified.
    @return a boiler_location struct containing the location of the boiler
-   	Defaults to all zeros if none is found (please check for this)
+   Defaults to all zeros if none is found (please check for this)
 */
-boiler_location get_boiler(doubly_linked_list_node<line> * line_data_start) {
-  doubly_linked_list_node<line> * node = line_data_start;
+boiler_location get_boiler(doubly_linked_list_node<line> * line_data_start, uint8_t alliance) {
+	doubly_linked_list_node<line> * node = line_data_start;
 
-  boiler_location location;
-  location.delta_x = 0;
-  location.delta_y = 0;
-  bool finished = false;
+	boiler_location location;
+	location.delta_x = 0;
+	location.delta_y = 0;
+	bool finished = false;
 
-  while (!finished) {
-    uint16_t length = line_length(node->data);
-    if (length > MINIMUM_LENGTH) {
-      float angle = get_angle(node->data, node->next->data);
-      if (angle < TARGET_ANGLE + ANGLE_RANGE && angle > TARGET_ANGLE - ANGLE_RANGE) {
-        bool nearby = test_distance(node->data, node->next->data);
-        if (nearby) {
-          location.delta_x = node->data->end_x;
-          location.delta_y = node->data->end_y;
-        }
-      }
-    }
-    if (node->next == line_data_start) {
-      finished = true;
-    }
-    node = node->next;
-  }
+	while (!finished) {
+		float angle = get_angle(node->data, node->next->data);
+		if (angle < TARGET_ANGLE + ANGLE_RANGE && angle > TARGET_ANGLE - ANGLE_RANGE) {
+			bool nearby = test_distance(node->data, node->next->data);
+			if (nearby) {
+				int16_t delta_x;
+				int16_t delta_y;
+				if (alliance == BLUE_ALLIANCE) {
+					delta_x = node->next->data->start_x;
+					delta_y = node->next->data->start_y;
+					float slope = get_slope(node->next->data->start_x, node->next->data->start_y,
+								node->next->data->end_x, node->next->data->end_y);
+					if(node->next->data->end_x - node->next->data->start_x < node->next->data->end_y - node->next->data->start_y){
+						float width_denominator = 2.0f * sqrt(1.0f + slope * slope) * (slope > 0 ? -1.0f : 1.0f);
+						delta_x += slope * BOILER_WIDTH / width_denominator;
+						delta_y += BOILER_WIDTH / width_denominator;
+						float depth_denominator = sqrt(1.0f + 1.0f / (slope * slope));
+						delta_x += -BOILER_DEPTH / (slope * depth_denominator);
+						delta_y += BOILER_DEPTH / depth_denominator;
+					}
+					else{
+						float width_denominator = 2.0f * sqrt(1 + slope * slope);
+						delta_x = BOILER_WIDTH / width_denominator;
+						delta_y = slope * BOILER_WIDTH / width_denominator;
+						float depth_denominator = sqrt(1.0f + 1.0f / (slope * slope)) * (slope > 0 ? -1.0f : 1.0f);
+						delta_x += -BOILER_DEPTH / depth_denominator;
+						delta_y += BOILER_DEPTH / (slope * depth_denominator);
+					}
+				}
+				else if (alliance == RED_ALLIANCE) {
+					delta_x = node->data->end_x;
+					delta_y = node->data->end_y;
+					float slope = get_slope(node->data->start_x, node->data->start_y,
+								node->data->end_x, node->data->end_y);
+					if(node->data->end_x - node->data->start_x < node->data->end_y - node->data->start_y){
+						float width_denominator = 2.0f * sqrt(1 + slope * slope) * (slope > 0 ? -1.0f : 1.0f);
+						delta_x += slope * BOILER_WIDTH / width_denominator;
+						delta_y += BOILER_WIDTH / width_denominator;
+						float depth_denominator = sqrt(1.0f + 1.0f / (slope * slope));
+						delta_x += BOILER_DEPTH / (slope * depth_denominator);
+						delta_y += -BOILER_DEPTH / depth_denominator;
+					}
+					else{
+						float width_denominator = 2.0f * sqrt(1 + slope * slope);
+						delta_x += BOILER_WIDTH / width_denominator;
+						delta_y += slope * BOILER_WIDTH / width_denominator;
+						float depth_denominator = sqrt(1.0f + 1.0f / (slope * slope)) * (slope > 0 ? -1.0f : 1.0f);
+						delta_x += BOILER_DEPTH / depth_denominator;
+						delta_y += -BOILER_DEPTH / (slope * depth_denominator);
+					}
+				}
+				else {
+					break;
+				}
 
-  return location;
+				location.delta_x = delta_x;
+				location.delta_y = delta_y;
+        
+				break;
+			}
+		}
+		if (node->next == line_data_start) {
+			finished = true;
+		}
+		node = node->next;
+	}
+
+	return location;
 }

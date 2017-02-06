@@ -33,7 +33,7 @@ using namespace std;
    Plot lidar data
    @param lidar_data_start the "first" node in a circular doubly linked
    list of lidar datapoints
- */
+*/
 void plot(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 	glBegin(GL_POINTS);
 	doubly_linked_list_node<lidar_datapoint> * node = lidar_data_start;
@@ -52,8 +52,8 @@ void plot(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
    Process lidar data
    Draws a lattice, calculates (possibly timing) lines and boiler location,
    then draws lines and boiler location.
- */
-void process(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
+*/
+void process(doubly_linked_list_node<lidar_datapoint> * lidar_data_start, int alliance){
 	// Begin draw lattice 
 #ifdef GUI
 	if(lidar_data_start != NULL){
@@ -94,7 +94,7 @@ void process(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 #endif
 
 		// Calculate boiler
-		boiler_location target = get_boiler(first_line);
+		boiler_location target = get_boiler(first_line, alliance);
 	
 #ifdef TIME
 		end = chrono::high_resolution_clock::now();
@@ -152,7 +152,7 @@ void process(doubly_linked_list_node<lidar_datapoint> * lidar_data_start){
 /**
    Setup for GLFW window
    Window is 640 by 480, with internal space from -640 to 640 and -480 to 480
- */
+*/
 #ifdef GUI
 GLFWwindow * setup_window(){
 	glfwInit();
@@ -175,12 +175,13 @@ GLFWwindow * setup_window(){
 /**
    Begin cycle to read data from a teensy
    This runs forever if GUI is enabled
- */
+*/
 int read_teensy(int argc, char * argv[]){
-	string port = argv[2];
+	int alliance = atoi(argv[2]);
+	string port = argv[3];
 	int baud = 115200; // LIDAR teensy default baud rate
 	if(argc > 3){
-		baud = atoi(argv[3]);
+		baud = atoi(argv[4]);
 	}
 
 
@@ -214,7 +215,7 @@ int read_teensy(int argc, char * argv[]){
 			cout << "Blurring points:\t" << time_span.count() << "\n";
 #endif
 			if(lidar_data_start != NULL){
-				process(lidar_data_start);
+				process(lidar_data_start, alliance);
 			}
 		}
 
@@ -236,9 +237,10 @@ int read_teensy(int argc, char * argv[]){
 /**
    Begin cycle to read data from a file
    This runs forever if GUI is enabled
- */
+*/
 int read_file(int argc, char * argv[]){
-	fstream file(argv[2]);
+	int alliance = atoi(argv[2]);
+	fstream file(argv[3]);
 
 	doubly_linked_list_node<lidar_datapoint> * first_node = NULL;
 	doubly_linked_list_node<lidar_datapoint> * previous_node = NULL;
@@ -315,7 +317,7 @@ int read_file(int argc, char * argv[]){
 
 	while(!glfwWindowShouldClose(window)){
 #endif
-		process(first_node);
+		process(first_node, alliance);
 
 #ifdef GUI
 		glfwSwapBuffers(window);
@@ -334,7 +336,7 @@ int read_file(int argc, char * argv[]){
 int main(int argc, char * argv[]){
 	init_trig();
 	if(argc < 3){
-		cout << "Usage:\n./graph_lidar [type] [serial port | file] [baud rate (optional)]\n";
+		cout << "Usage:\n./graph_lidar [type] [alliance] [serial port | file] [baud rate (optional)]\n";
 		return -1;
 	}
 	string type = argv[1];
@@ -343,10 +345,7 @@ int main(int argc, char * argv[]){
 		return read_teensy(argc, argv);
 	}
 	else if(type == "file"){
-		for(int i = 0; i < 10; i++){
-			read_file(argc, argv);
-		}
-		return 0;
+		return read_file(argc, argv);
 	}
 	
 	return 0;
