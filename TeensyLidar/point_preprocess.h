@@ -43,6 +43,9 @@ void blur_points(doubly_linked_list_node<lidar_datapoint> * lidar_data_start);
 */
 void add_cartesians(doubly_linked_list_node<lidar_datapoint> * lidar_data_start);
 
+/**
+ Prepare the sin/cosine cache
+ */
 void init_trig();
 
 #endif
