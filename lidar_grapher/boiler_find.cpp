@@ -1,6 +1,8 @@
 #include "boiler_find.h"
 #include "math_util.h"
 
+#include <iostream>
+using namespace std;
 #include <cmath>
 
 /**
@@ -10,21 +12,6 @@
 */
 float calculate_angle(line * line1) {
 	return atan2(line1->start_y - line1->end_y, line1->start_x - line1->end_x);
-}
-
-/**
-   Calculates the angle between two lines.
-   This function calculates the angle of each line via
-   arctangent, then subtracts them.
-   It will always return a value between 0.0f and 6.28f
-   in radians.
-*/
-float get_angle(line * line1, line * line2) {
-	float angle = calculate_angle(line2) - calculate_angle(line1);
-	if (angle < 0.0f) {
-		angle = angle + M_PI * 2.0;
-	}
-	return angle;
 }
 
 /**
@@ -62,55 +49,36 @@ boiler_location get_boiler(doubly_linked_list_node<line> * line_data_start, uint
 	bool finished = false;
 
 	while (!finished) {
-		float angle = get_angle(node->data, node->next->data);
+		float angle1 = calculate_angle(node->data);
+		float angle2 = calculate_angle(node->next->data);
+		float angle = angle2 - angle1;
+		if (angle < 0.0f) {
+			angle = angle + M_PI * 2.0;
+		}
 		if (angle < TARGET_ANGLE + ANGLE_RANGE && angle > TARGET_ANGLE - ANGLE_RANGE) {
 			bool nearby = test_distance(node->data, node->next->data);
 			if (nearby) {
 				int16_t delta_x;
 				int16_t delta_y;
 				if (alliance == BLUE_ALLIANCE) {
-					delta_x = node->next->data->start_x;
-					delta_y = node->next->data->start_y;
-					float slope = get_slope(node->next->data->start_x, node->next->data->start_y,
-								node->next->data->end_x, node->next->data->end_y);
-					if(node->next->data->end_x - node->next->data->start_x < node->next->data->end_y - node->next->data->start_y){
-						float width_denominator = 2.0f * sqrt(1.0f + slope * slope) * (slope > 0 ? -1.0f : 1.0f);
-						delta_x += slope * BOILER_WIDTH / width_denominator;
-						delta_y += BOILER_WIDTH / width_denominator;
-						float depth_denominator = sqrt(1.0f + 1.0f / (slope * slope));
-						delta_x += -BOILER_DEPTH / (slope * depth_denominator);
-						delta_y += BOILER_DEPTH / depth_denominator;
-					}
-					else{
-						float width_denominator = 2.0f * sqrt(1 + slope * slope);
-						delta_x = BOILER_WIDTH / width_denominator;
-						delta_y = slope * BOILER_WIDTH / width_denominator;
-						float depth_denominator = sqrt(1.0f + 1.0f / (slope * slope)) * (slope > 0 ? -1.0f : 1.0f);
-						delta_x += -BOILER_DEPTH / depth_denominator;
-						delta_y += BOILER_DEPTH / (slope * depth_denominator);
-					}
-				}
-				else if (alliance == RED_ALLIANCE) {
 					delta_x = node->data->end_x;
 					delta_y = node->data->end_y;
-					float slope = get_slope(node->data->start_x, node->data->start_y,
-								node->data->end_x, node->data->end_y);
-					if(node->data->end_x - node->data->start_x < node->data->end_y - node->data->start_y){
-						float width_denominator = 2.0f * sqrt(1 + slope * slope) * (slope > 0 ? -1.0f : 1.0f);
-						delta_x += slope * BOILER_WIDTH / width_denominator;
-						delta_y += BOILER_WIDTH / width_denominator;
-						float depth_denominator = sqrt(1.0f + 1.0f / (slope * slope));
-						delta_x += BOILER_DEPTH / (slope * depth_denominator);
-						delta_y += -BOILER_DEPTH / depth_denominator;
-					}
-					else{
-						float width_denominator = 2.0f * sqrt(1 + slope * slope);
-						delta_x += BOILER_WIDTH / width_denominator;
-						delta_y += slope * BOILER_WIDTH / width_denominator;
-						float depth_denominator = sqrt(1.0f + 1.0f / (slope * slope)) * (slope > 0 ? -1.0f : 1.0f);
-						delta_x += BOILER_DEPTH / depth_denominator;
-						delta_y += -BOILER_DEPTH / (slope * depth_denominator);
-					}
+					float cos_val = cos(angle1);
+					float sin_val = sin(angle1);
+					delta_x += cos_val * BOILER_WIDTH / 2.0f;
+					delta_y += sin_val * BOILER_WIDTH / 2.0f;
+					delta_x += -sin_val * BOILER_DEPTH;
+					delta_y += cos_val * BOILER_DEPTH;
+				}
+				else if (alliance == RED_ALLIANCE) {
+					delta_x = node->next->data->start_x;
+					delta_y = node->next->data->start_y;
+					float cos_val = cos(angle2);
+					float sin_val = sin(angle2);
+					delta_x += -cos_val * BOILER_WIDTH / 2.0f;
+					delta_y += -sin_val * BOILER_WIDTH / 2.0f;
+					delta_x += -sin_val * BOILER_DEPTH;
+					delta_y += cos_val * BOILER_DEPTH;
 				}
 				else {
 					break;

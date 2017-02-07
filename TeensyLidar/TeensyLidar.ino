@@ -54,7 +54,20 @@ boiler_location boiler;
 
 uint8_t calculation_idx;
 
-void set_alliance(byte * msg);
+/**
+  Set alliance (red/blue)
+*/
+void set_alliance(byte * msg) {
+  alliance = msg[0];
+  if (alliance == BLUE_ALLIANCE) {
+    min_angle = BLUE_ALLIANCE_MIN_ANGLE;
+    max_angle = BLUE_ALLIANCE_MAX_ANGLE;
+  }
+  else if (alliance == RED_ALLIANCE) {
+    min_angle = RED_ALLIANCE_MIN_ANGLE;
+    max_angle = RED_ALLIANCE_MAX_ANGLE;
+  }
+}
 
 void try_load_next_bytes();
 void packet_to_array();
@@ -106,7 +119,7 @@ void loop() {
       calculation_idx = 1; // Start calculation
     }
   }
-
+  
   // CAN send
   if (last_can_loop > 1) {
     writeLongs(CAN_LIDAR_ID, boiler.delta_x, boiler.delta_y);
@@ -361,21 +374,6 @@ void load_linked_list() {
   }
   else {
     lidar_data_start = NULL;
-  }
-}
-
-/**
- Set alliance (red/blue)
- */
-void set_alliance(byte * msg){
-  alliance = msg[0];
-  if(alliance == BLUE_ALLIANCE){
-    min_angle = BLUE_ALLIANCE_MIN_ANGLE;
-    max_angle = BLUE_ALLIANCE_MAX_ANGLE;
-  }
-  else if(alliance == RED_ALLIANCE){
-    min_angle = RED_ALLIANCE_MIN_ANGLE;
-    max_angle = RED_ALLIANCE_MAX_ANGLE;
   }
 }
 

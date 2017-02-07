@@ -180,10 +180,9 @@ int read_teensy(int argc, char * argv[]){
 	int alliance = atoi(argv[2]);
 	string port = argv[3];
 	int baud = 115200; // LIDAR teensy default baud rate
-	if(argc > 3){
+	if(argc > 4){
 		baud = atoi(argv[4]);
 	}
-
 
 	int teensy = open_teensy(port, baud);
 	if(teensy == -1){
