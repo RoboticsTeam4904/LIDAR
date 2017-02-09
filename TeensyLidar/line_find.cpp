@@ -37,7 +37,7 @@ doubly_linked_list_node<line> * get_lines(doubly_linked_list_node<lidar_datapoin
         break;
       }
     }
-
+    
     // Run forward (increasing angle) slope and distance comparison
     while (true) {
       end_node = end_node->next;
@@ -83,12 +83,12 @@ doubly_linked_list_node<line> * get_lines(doubly_linked_list_node<lidar_datapoin
       }
     }
 
-    if (end_node->next->data->theta < start_node->next->data->theta) {
+    if (end_node->next->data->theta <= start_node->next->data->theta) {
       break;
     }
     node = end_node->next;
   }
-  
+
   if (previous_line != NULL && first_line != NULL) {
     previous_line->next = first_line;
     first_line->prev = previous_line;
