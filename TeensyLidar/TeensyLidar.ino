@@ -7,7 +7,6 @@
 #include "point_preprocess.h"
 #include "datatypes.h"
 
-
 #ifdef TIME
 #include <stdlib.h>
 /**
@@ -36,13 +35,43 @@ long TIMEOUT = 10000;
 long last_lidar_data;
 
 // Current data
+uint8_t alliance;
+#define BLUE_ALLIANCE_MIN_ANGLE 150
+#define BLUE_ALLIANCE_MAX_ANGLE 315
+#define RED_ALLIANCE_MIN_ANGLE 45
+#define RED_ALLIANCE_MAX_ANGLE 210
+uint16_t min_angle;
+uint16_t max_angle;
 uint16_t * distances;
 long lidar_speed;
 doubly_linked_list_node<lidar_datapoint> * lidar_data_start;
 doubly_linked_list_node<line> * line_data_start;
 boiler_location boiler;
 
+// CAN IDs
+#define CAN_LIDAR_ID 0x600
+#define CAN_LIDAR_ENCODER_ID 0x607
+
 uint8_t calculation_idx;
+
+/**
+  Set alliance (red/blue)
+*/
+void set_alliance(byte * msg) {
+  alliance = msg[0];
+  if (alliance == BLUE_ALLIANCE) {
+    min_angle = BLUE_ALLIANCE_MIN_ANGLE;
+    max_angle = BLUE_ALLIANCE_MAX_ANGLE;
+  }
+  else if (alliance == RED_ALLIANCE) {
+    min_angle = RED_ALLIANCE_MIN_ANGLE;
+    max_angle = RED_ALLIANCE_MAX_ANGLE;
+  }
+}
+
+void try_load_next_bytes();
+void packet_to_array();
+void load_linked_list();
 
 void setup() {
   CAN_begin();
@@ -59,11 +88,11 @@ void setup() {
   boiler.delta_x = 0;
   boiler.delta_y = 0;
   last_can_loop = 0;
+  alliance = 0;
+  min_angle = 0;
+  max_angle = 0;
+  CAN_add_id(CAN_LIDAR_ID, &set_alliance);
 }
-
-void try_load_next_bytes();
-void packet_to_array();
-void load_linked_list();
 
 void writeLongs(uint32_t id, long value1, long value2) {
   byte * msg = new byte[8];
@@ -90,16 +119,18 @@ void loop() {
       calculation_idx = 1; // Start calculation
     }
   }
-
+  
   // CAN send
   if (last_can_loop > 1) {
-    writeLongs(0x600, boiler.delta_x, boiler.delta_y);
-    writeLongs(0x607, 0, lidar_speed);
+    writeLongs(CAN_LIDAR_ID, boiler.delta_x, boiler.delta_y);
+    writeLongs(CAN_LIDAR_ENCODER_ID, 0, lidar_speed);
     last_can_loop = 0;
   }
   else {
     last_can_loop++;
   }
+  // CAN Receive
+  CAN_update();
 
 #ifdef TIME
   long timing_start = micros();
@@ -148,7 +179,7 @@ void loop() {
     }
   }
   else if (calculation_idx == 8) {
-    boiler = get_boiler(line_data_start);
+    boiler = get_boiler(line_data_start, alliance);
     calculation_idx++;
   }
   else if (calculation_idx == 9) {
@@ -177,17 +208,19 @@ void loop() {
     }
     else if (request == '1') {
       for (uint16_t i = 0; i < 360; i++) {
-        if (distances[i] != 0) {
-          for (uint8_t j = 1; j < 3; j++) {
-            if (i < pow(10, j)) Serial.print("0");
+        if (i < min_angle || i > max_angle) {
+          if (distances[i] != 0) {
+            for (uint8_t j = 1; j < 3; j++) {
+              if (i < pow(10, j)) Serial.print("0");
+            }
+            Serial.print(i);
+            Serial.print(",");
+            for (uint8_t j = 1; j < 4; j++) {
+              if (distances[i] < pow(10, j)) Serial.print("0");
+            }
+            Serial.println(distances[i]);
+            delayMicroseconds(2);
           }
-          Serial.print(i);
-          Serial.print(",");
-          for (uint8_t j = 1; j < 4; j++) {
-            if (distances[i] < pow(10, j)) Serial.print("0");
-          }
-          Serial.println(distances[i]);
-          delayMicroseconds(2);
         }
       }
       Serial.print("#");
@@ -226,14 +259,14 @@ void loop() {
       Serial.print("#");
     }
     else if (request == '3') {
-      if(boiler.delta_x < 0) Serial.print("-");
+      if (boiler.delta_x < 0) Serial.print("-");
       else Serial.print("0");
       for (uint8_t j = 1; j < 4; j++) {
         if (abs(boiler.delta_x) < pow(10, j)) Serial.print("0");
       }
       Serial.print(abs(boiler.delta_x));
       Serial.print(",");
-      if(boiler.delta_y < 0) Serial.print("-");
+      if (boiler.delta_y < 0) Serial.print("-");
       else Serial.print("0");
       for (uint8_t j = 1; j < 4; j++) {
         if (abs(boiler.delta_y) < pow(10, j)) Serial.print("0");
@@ -311,24 +344,26 @@ void packet_to_array() {
 void load_linked_list() {
   doubly_linked_list_node<lidar_datapoint> * previous_node = NULL;
   for (int i = 0; i < 360; i++) {
-    if (distances[i] != 0) {
-      if (previous_node == NULL) {
-        previous_node = new doubly_linked_list_node<lidar_datapoint>;
-        previous_node->data = new lidar_datapoint;
-        previous_node->data->theta = i;
-        previous_node->data->radius = distances[i];
-        previous_node->next = NULL;
-        previous_node->prev = NULL;
-        lidar_data_start = previous_node;
-      }
-      else {
-        doubly_linked_list_node<lidar_datapoint> * node = new doubly_linked_list_node<lidar_datapoint>;
-        node->data = new lidar_datapoint;
-        node->data->theta = i;
-        node->data->radius = distances[i];
-        node->prev = previous_node;
-        previous_node->next = node;
-        previous_node = node;
+    if (i < min_angle || i > max_angle) {
+      if (distances[i] != 0) {
+        if (previous_node == NULL) {
+          previous_node = new doubly_linked_list_node<lidar_datapoint>;
+          previous_node->data = new lidar_datapoint;
+          previous_node->data->theta = i;
+          previous_node->data->radius = distances[i];
+          previous_node->next = NULL;
+          previous_node->prev = NULL;
+          lidar_data_start = previous_node;
+        }
+        else {
+          doubly_linked_list_node<lidar_datapoint> * node = new doubly_linked_list_node<lidar_datapoint>;
+          node->data = new lidar_datapoint;
+          node->data->theta = i;
+          node->data->radius = distances[i];
+          node->prev = previous_node;
+          previous_node->next = node;
+          previous_node = node;
+        }
       }
     }
   }

@@ -8,7 +8,7 @@
    The algorithm determines the end of a line by looking for a change
    in slope. This is the limit of that change.
 */
-#define SLOPE_LIMIT 0.07
+#define SLOPE_LIMIT 0.09
 /**
    The algorithm also looks for a change in the distance between points.
    This is the limit of that change.

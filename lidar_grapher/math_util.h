@@ -4,6 +4,11 @@
 #include "datatypes.h"
 
 /**
+   Calculates the slope of the line between two points.
+*/
+float get_slope(int16_t point1_x, int16_t point1_y, int16_t point2_x, int16_t point2_y);
+
+/**
    Calculates the slope of the line between two lidar_datapoints.
    This requires that the cartersian variables of the points be
    calculated already.

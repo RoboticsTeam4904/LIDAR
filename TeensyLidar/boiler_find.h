@@ -8,28 +8,29 @@
 #include "doubly_linked_list.h"
 
 /**
+   Constants for alliance
+*/
+#define BLUE_ALLIANCE 0x01
+#define RED_ALLIANCE 0x02
+/**
    The angle between the boiler and the operator stations
    This is 135*, or 3pi/4 radians
 */
 #define TARGET_ANGLE M_PI/4.0
 /**
-   The minimum length of a line, in mm.
-   Used to reduce uneeded angle calculations
+   Maximum distance between the endpoints in millimeters
 */
-#define MINIMUM_LENGTH 256
-/**
-   The amount to divide the distance from the origin
-   to the endpoint of a line to for comparison to the
-   distance between the two endpoints of a line.
-   Larger numbers increase sensitivity, smaller numbers
-   decrease sensitivity
-*/
-#define ENDPOINT_DIVISOR 64
+#define ENDPOINT_DISTANCE 192
 /**
    Range for an angle to be considered the TARGET_ANGLE
 */
 #define ANGLE_RANGE M_PI/24.0
-
+/**
+ Boiler location adjustments relative to corner
+ All dimensions in millimetres
+ */
+#define BOILER_WIDTH 1066.8
+#define BOILER_DEPTH 456.18
 
 /**
    Calculate the location of the boiler based on line data.
@@ -43,7 +44,7 @@
    @return a boiler_location struct containing the RELATIVE location of the boiler
    	Defaults to all zeros if none is found (please check for this)
 */
-boiler_location get_boiler(doubly_linked_list_node<line> * line_data_start);
+boiler_location get_boiler(doubly_linked_list_node<line> * line_data_start, uint8_t alliance);
 
 
 #endif
